@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTATE — CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d0d0b;--paper:#f5f2ec;--cream:#ede9df;--warm-mid:#c8bfae;
+  --accent:#b8924a;--accent-light:#d4a96a;--red:#8b2c2c;--green:#2c5c3a;
+  --blue:#2c4a6e;--muted:#7a7166;--border:#d8d0c4;--white:#fff;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+.shell{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:230px;flex-shrink:0;background:var(--ink);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100}
+.sidebar-brand{padding:32px 28px 28px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-word{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;letter-spacing:6px;color:var(--paper);display:block}
+.brand-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--warm-mid);display:block;margin-top:4px;text-transform:uppercase}
+.sidebar-nav{padding:20px 0;flex:1;overflow-y:auto}
+.nav-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--warm-mid);text-transform:uppercase;padding:0 28px;margin-bottom:6px;margin-top:18px;display:block}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 28px;font-size:13px;color:rgba(245,242,236,.6);cursor:pointer;transition:all .2s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--paper);background:rgba(255,255,255,.04)}
+.nav-item.active{color:var(--accent-light);border-left-color:var(--accent);background:rgba(184,146,74,.08)}
+.sidebar-footer{padding:20px 28px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:var(--warm-mid)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:13px;color:#fff;margin-bottom:8px}
+.storage-badge{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:9px;color:var(--green);letter-spacing:1px;margin-top:10px}
+.storage-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── MAIN ── */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 48px;border-bottom:1px solid var(--border);background:var(--paper);position:sticky;top:0;z-index:50}
+.topbar-issue{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.topbar-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px}
+.content{padding:40px 48px;flex:1}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 20px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:1px;text-transform:uppercase;border:none;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--ink);color:var(--paper)}.btn-primary:hover{background:#2a2a26}
+.btn-outline{background:transparent;color:var(--ink);border:1px solid var(--border)}.btn-outline:hover{border-color:var(--ink)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-light)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(139,44,44,.3);font-size:10px;padding:5px 12px}.btn-danger:hover{background:rgba(139,44,44,.08)}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#3a5f8a}
+
+/* ── SECTION MASTHEAD ── */
+.section-masthead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;padding-bottom:16px;border-bottom:3px solid var(--ink)}
+.section-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+.section-headline{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;line-height:1;letter-spacing:-1px}
+.section-headline em{font-style:italic;color:var(--accent)}
+.section-count{font-family:'Playfair Display',serif;font-size:64px;font-weight:900;color:var(--cream);line-height:1;letter-spacing:-2px}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border);margin-bottom:40px}
+.kpi-cell{padding:24px 28px;border-right:1px solid var(--border);position:relative;overflow:hidden}
+.kpi-cell:last-child{border-right:none}
+.kpi-cell::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.kpi-cell:hover::before{transform:scaleX(1)}
+.kpi-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:10px}
+.kpi-value{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;display:block;line-height:1}
+.kpi-change{font-size:11px;margin-top:6px;display:block;font-family:'DM Mono',monospace}
+.kpi-change.up{color:var(--green)}.kpi-change.down{color:var(--red)}
+
+/* ── GRIDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:40px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:40px}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:40px}
+
+/* ── CARD ── */
+.card{border:1px solid var(--border);background:var(--white);overflow:hidden}
+.card-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
+
+/* ── TABLES ── */
+.prop-table{width:100%;border-collapse:collapse}
+.prop-table th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--cream);white-space:nowrap}
+.prop-table td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.prop-table tr:last-child td{border-bottom:none}
+.prop-table tr:hover td{background:var(--cream)}
+.prop-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:500;display:block}
+.prop-addr{font-size:10px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace}
+.price-val{font-family:'Playfair Display',serif;font-size:14px;font-weight:500}
+
+/* ── STATUS PILLS ── */
+.status-pill{display:inline-block;padding:3px 10px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase}
+.status-pill.active{background:rgba(44,92,58,.1);color:var(--green)}
+.status-pill.pending{background:rgba(184,146,74,.15);color:#7a5c20}
+.status-pill.contingent{background:rgba(44,74,110,.12);color:var(--blue)}
+.status-pill.closed{background:rgba(13,13,11,.07);color:var(--muted)}
+.status-pill.hot{background:rgba(139,44,44,.1);color:var(--red)}
+
+/* ── DOM BADGE ── */
+.dom-badge{font-family:'DM Mono',monospace;font-size:10px;font-weight:400;display:inline-block;padding:2px 8px;background:var(--cream)}
+.dom-badge.urgent{background:rgba(139,44,44,.1);color:var(--red)}
+.dom-badge.warn{background:rgba(184,146,74,.15);color:#7a5c20}
+
+/* ── LISTING PHOTO CARDS ── */
+.listing-card{border:1px solid var(--border);background:var(--white);cursor:pointer;transition:all .25s;overflow:hidden}
+.listing-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(13,13,11,.1)}
+.listing-card.buyer-card:hover{border-color:var(--blue)}
+.listing-photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.listing-photo-placeholder{width:100%;aspect-ratio:4/3;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+.listing-photo-placeholder span{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--warm-mid);text-transform:uppercase}
+.listing-card-body{padding:16px 18px 18px}
+.listing-card-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;line-height:1.2;margin-bottom:4px}
+.listing-card-addr{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:12px}
+.listing-card-price{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
+.listing-card-meta{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.listing-card-meta span{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px}
+.listing-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px}
+
+/* ── CONTINGENCY CHIPS ── */
+.contingency-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(44,74,110,.08);border:1px solid rgba(44,74,110,.2);font-family:'DM Mono',monospace;font-size:9px;color:var(--blue);letter-spacing:1px;margin:3px 3px 0 0}
+.contingency-chip .days{background:var(--blue);color:#fff;padding:1px 5px;font-size:8px}
+
+/* ── PIPELINE ── */
+.pipeline{padding:24px}
+.pipeline-stage{margin-bottom:20px}
+.pipeline-bar-bg{height:6px;background:var(--cream)}
+.pipeline-bar-fill{height:100%;background:var(--ink);transition:width .6s}
+.pipeline-bar-fill.gold{background:var(--accent)}.pipeline-bar-fill.light{background:var(--warm-mid)}
+.pipeline-deal{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px}
+.pipeline-deal:last-child{border-bottom:none}
+.pipeline-deal-val{font-family:'Playfair Display',serif;font-size:14px;font-weight:600}
+
+/* ── CLIENT CARDS ── */
+.client-card{border:1px solid var(--border);padding:24px;background:var(--white);display:flex;gap:16px;transition:all .2s}
+.client-card:hover{border-color:var(--accent)}
+.client-initials{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;font-weight:700;flex-shrink:0}
+
+/* ── CSV ── */
+.import-zone{border:2px dashed var(--border);padding:48px;text-align:center;cursor:pointer;transition:all .2s;background:var(--white);margin-bottom:32px;display:block}
+.import-zone:hover,.import-zone.drag-over{border-color:var(--accent);background:rgba(184,146,74,.04)}
+.import-zone input[type=file]{display:none}
+.csv-template-box{border:1px solid var(--border);background:var(--cream);padding:20px 24px;margin-bottom:32px}
+.csv-col-tag{font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;background:var(--white);border:1px solid var(--border);color:var(--ink);display:inline-block;margin:3px}
+.csv-col-tag.required{border-color:var(--accent);color:var(--accent)}
+.csv-col-tag.photo{border-color:var(--green);color:var(--green)}
+
+/* ── TAGS ── */
+.tag{display:inline-block;padding:2px 8px;border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-right:4px}
+
+/* ── MAGAZINE RULE ── */
+.magazine-rule{display:flex;align-items:center;gap:16px;margin:40px 0}
+.magazine-rule::before,.magazine-rule::after{content:'';flex:1;height:1px;background:var(--border)}
+.magazine-rule-text{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,13,11,.7);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--paper);width:680px;max-height:90vh;overflow-y:auto}
+.modal-top{padding:28px 36px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--paper);z-index:10}
+.modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted)}
+.modal-body{padding:28px 36px}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.form-input,.form-select{width:100%;padding:10px 13px;border:1px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s;appearance:none}
+.form-input:focus,.form-select:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.form-hint{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:5px;letter-spacing:1px}
+.form-section-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);display:block}
+
+/* ── CONTINGENCY BUILDER ── */
+.contingency-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.contingency-row .form-input{flex:1}
+.contingency-row .days-input{width:80px;flex-shrink:0}
+.contingency-list{margin-top:8px}
+.contingency-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(44,74,110,.06);border:1px solid rgba(44,74,110,.15);margin-bottom:6px}
+.contingency-item-name{font-size:13px}
+.contingency-item-days{font-family:'DM Mono',monospace;font-size:10px;color:var(--blue)}
+.contingency-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+.contingency-remove:hover{color:var(--red)}
+
+/* ── DETAIL MODAL ── */
+.detail-photo{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.detail-photo-placeholder{width:100%;aspect-ratio:16/9;background:var(--cream);display:flex;align-items:center;justify-content:center}
+.detail-stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border)}
+.detail-stat{padding:16px;border-right:1px solid var(--border)}
+.detail-stat:last-child{border-right:none}
+.photo-url-input{flex:1;padding:8px 10px;border:1px dashed var(--border);background:var(--cream);font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);outline:none}
+.photo-url-input:focus{border-color:var(--accent);background:#fff}
+
+/* ── COMP TABLE ── */
+.comp-table{width:100%;border-collapse:collapse}
+.comp-table th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:12px 14px;text-align:left;border-bottom:2px solid var(--ink);white-space:nowrap}
+.comp-table td{padding:12px 14px;font-size:12px;border-bottom:1px solid var(--border)}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table tr:hover td{background:var(--cream)}
+.comp-highlight td{background:rgba(184,146,74,.07)}
+.delta-up{color:var(--green);font-family:'DM Mono',monospace;font-size:11px}
+.delta-down{color:var(--red);font-family:'DM Mono',monospace;font-size:11px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:32px;right:32px;background:var(--ink);color:var(--paper);padding:14px 24px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success::before{content:'✓  ';color:var(--accent-light)}
+.toast.error::before{content:'✕  ';color:#e07070}
+
+/* ── REPORT ── */
+.report-masthead{text-align:center;padding:60px 48px 40px;border-bottom:3px solid var(--ink);margin-bottom:48px}
+.report-vol{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:16px}
+.report-main-title{font-family:'Playfair Display',serif;font-size:56px;font-weight:900;line-height:1;letter-spacing:-2px;display:block;margin-bottom:8px}
+.report-sub{font-family:'Playfair Display',serif;font-style:italic;font-size:20px;color:var(--muted);display:block;margin-bottom:24px}
+.report-byline{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+.report-accent-line{width:60px;height:3px;background:var(--accent);margin:24px auto}
+.report-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0 32px}
+.report-photo-grid img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.report-photo-grid .no-photo{width:100%;aspect-ratio:4/3;background:var(--cream);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9px;color:var(--warm-mid);letter-spacing:2px}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+.empty-state{text-align:center;padding:80px 40px;color:var(--muted);grid-column:1/-1}
+.empty-state-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--warm-mid);margin-bottom:8px}
+.empty-state-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase}
+
+/* ── TAB SWITCHER ── */
+.tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:28px;gap:0}
+.tab-btn{padding:12px 28px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:none;border:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink)}
+.tab-btn.buyer-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .4s ease both}
+
+@media print{
+  .sidebar,.topbar,.btn,.modal-overlay{display:none!important}
+  .main{margin-left:0}.content{padding:0}
+}
+
+/* CLIENT CARDS */
+.client-card{border:1px solid var(--border);background:var(--white);padding:22px;cursor:pointer;transition:all .2s}
+.client-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(13,13,11,.08)}
+.client-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:12px}
+.client-name-txt{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:2px}
+.client-type-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:block}
+.client-contact-row{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px}
+.client-contact-row a{color:var(--muted);text-decoration:none}.client-contact-row a:hover{color:var(--accent)}
+/* PIPELINE KANBAN */
+.kanban-col{background:var(--cream);padding:14px;min-height:300px}
+.kanban-col-header{padding-bottom:12px;margin-bottom:12px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:baseline}
+.kanban-col-title{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+.kanban-col-val{font-family:'Playfair Display',serif;font-size:13px;font-weight:700}
+.deal-card{background:var(--white);border:1px solid var(--border);padding:14px;margin-bottom:10px;cursor:pointer;transition:all .2s}
+.deal-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(13,13,11,.08)}
+.deal-card-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;margin-bottom:3px}
+.deal-card-client{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+.deal-card-value{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--accent)}
+.deal-card-close{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:5px}
+.kanban-empty{text-align:center;padding:24px 12px;font-family:'DM Mono',monospace;font-size:9px;color:var(--warm-mid);letter-spacing:2px;text-transform:uppercase}
+/* CMA */
+.cma-report-card{border:1px solid var(--border);background:var(--white);padding:24px;margin-bottom:16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.cma-report-card:hover{border-color:var(--accent)}
+.cma-subject-addr{font-family:'Playfair Display',serif;font-size:18px;font-weight:700}
+.cma-created{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:4px}
+.cma-range-display{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--accent);text-align:right}
+.cma-comps-badge{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-align:right;margin-top:4px}
+.comp-input-row{display:grid;grid-template-columns:2.5fr 1fr 1fr 0.8fr 0.8fr 1fr 36px;gap:6px;align-items:center;margin-bottom:6px}
+.comp-header-row{display:grid;grid-template-columns:2.5fr 1fr 1fr 0.8fr 0.8fr 1fr 36px;gap:6px;margin-bottom:8px}
+.comp-header-row span{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.cma-result-bar{background:var(--ink);color:var(--paper);padding:24px 32px;margin-top:20px;display:flex;align-items:center;justify-content:space-between}
+.form-textarea{width:100%;padding:10px 13px;border:1px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s;resize:vertical;min-height:80px}
+.form-textarea:focus{border-color:var(--accent)}
+
+/* CLIENT CARDS */
+.client-card{border:1px solid var(--border);background:var(--white);padding:22px;cursor:pointer;transition:all .2s}
+.client-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(13,13,11,.08)}
+.client-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:12px}
+.client-name-txt{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:2px}
+.client-type-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:block}
+.client-contact-row{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px}
+.client-contact-row a{color:var(--muted);text-decoration:none}.client-contact-row a:hover{color:var(--accent)}
+/* KANBAN */
+.kanban-col{background:var(--cream);padding:14px;min-height:280px}
+.kanban-col-header{padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:baseline}
+.kanban-col-title{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+.kanban-col-val{font-family:'Playfair Display',serif;font-size:13px;font-weight:700}
+.deal-card{background:var(--white);border:1px solid var(--border);padding:12px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.deal-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(13,13,11,.08)}
+.deal-card-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;margin-bottom:3px;line-height:1.2}
+.deal-card-client{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+.deal-card-value{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--accent)}
+.deal-card-close{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px}
+.kanban-empty{text-align:center;padding:20px 8px;font-family:'DM Mono',monospace;font-size:8px;color:var(--warm-mid);letter-spacing:2px;text-transform:uppercase}
+/* CMA */
+.cma-report-card{border:1px solid var(--border);background:var(--white);padding:24px;margin-bottom:14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.cma-report-card:hover{border-color:var(--accent)}
+.comp-input-row{display:grid;grid-template-columns:2.5fr 1.2fr 1fr 0.7fr 0.7fr 1fr 32px;gap:6px;align-items:center;margin-bottom:6px}
+.comp-header-row{display:grid;grid-template-columns:2.5fr 1.2fr 1fr 0.7fr 0.7fr 1fr 32px;gap:6px;margin-bottom:8px}
+.comp-header-row span{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.cma-result-bar{background:var(--ink);color:var(--paper);padding:22px 28px;margin-top:16px;display:flex;align-items:center;justify-content:space-between}
+.form-textarea{width:100%;padding:10px 13px;border:1px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s;resize:vertical;min-height:80px}
+.form-textarea:focus{border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-word">ESTATE</span>
+    <span class="brand-sub">Property Intelligence</span>
+  </div>
+  <div class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <div class="nav-item active" onclick="showView('dashboard')"><span style="width:18px;text-align:center">◈</span> Dashboard</div>
+    <span class="nav-label">Portfolio</span>
+    <div class="nav-item" onclick="showView('listings')"><span style="width:18px;text-align:center">⊡</span> Listings</div>
+    <div class="nav-item" onclick="showView('buyers')"><span style="width:18px;text-align:center">⊙</span> Buyer Purchases</div>
+    <span class="nav-label">CRM</span>
+    <div class="nav-item" onclick="showView('clients')"><span style="width:18px;text-align:center">◎</span> Clients</div>
+    <div class="nav-item" onclick="showView('pipeline')"><span style="width:18px;text-align:center">⊕</span> Pipeline</div>
+    <span class="nav-label">Intelligence</span>
+    <div class="nav-item" onclick="showView('cma')"><span style="width:18px;text-align:center">◇</span> CMA Reports</div>
+    <div class="nav-item" onclick="openReportModal()"><span style="width:18px;text-align:center">▣</span> Generate Report</div>
+    <span class="nav-label">Data</span>
+    <div class="nav-item" onclick="showView('import')"><span style="width:18px;text-align:center">↑</span> Import CSV</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-avatar" id="broker-avatar">YN</div>
+    <div style="font-weight:500;color:var(--paper)" id="broker-name">Your Name</div>
+    <div style="margin-top:2px" id="broker-title">Your Title</div>
+    <div class="storage-badge"><div class="storage-dot"></div> Supabase Connected</div>
+  </div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-issue" id="topbar-issue">DASHBOARD — OVERVIEW</div>
+      <div class="topbar-title" id="topbar-title">Portfolio at a Glance</div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-date" id="topbar-date"></span>
+      <button class="btn btn-outline" onclick="openReportModal()">↗ Export Report</button>
+      <button class="btn btn-primary" id="topbar-add-btn" onclick="openAddListingModal()">+ Add Listing</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════ DASHBOARD ══════ -->
+    <div id="view-dashboard" class="view active">
+      <div class="section-masthead fade-up">
+        <div><span class="section-eyebrow">Overview · Active Portfolio</span><h1 class="section-headline">Market <em>Intelligence</em></h1></div>
+        <div class="section-count" id="dash-count">—</div>
+      </div>
+      <div class="kpi-strip fade-up" id="dash-kpi">
+        <div class="kpi-cell"><span class="kpi-label">Active Listings</span><span class="kpi-value">—</span></div>
+        <div class="kpi-cell"><span class="kpi-label">Portfolio Value</span><span class="kpi-value">—</span></div>
+        <div class="kpi-cell"><span class="kpi-label">Buyer Purchases</span><span class="kpi-value">—</span></div>
+        <div class="kpi-cell"><span class="kpi-label">Avg Days on Market</span><span class="kpi-value">—</span></div>
+      </div>
+      <div class="grid-2 fade-up">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent Listings</span><span class="kpi-label" style="margin:0;cursor:pointer" onclick="showView('listings')">View All →</span></div>
+          <table class="prop-table"><thead><tr><th>Property</th><th>Price</th><th>DOM</th><th>Status</th></tr></thead><tbody id="dash-listings-tb"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Buyer Purchases</span><span class="kpi-label" style="margin:0;cursor:pointer" onclick="showView('buyers')">View All →</span></div>
+          <table class="prop-table"><thead><tr><th>Property</th><th>Purchase Price</th><th>Status</th></tr></thead><tbody id="dash-buyers-tb"></tbody></table>
+        </div>
+      </div>
+      <div class="magazine-rule"><span class="magazine-rule-text">Pipeline Summary</span></div>
+      <div class="card fade-up">
+        <div class="card-header"><span class="card-title">Deal Pipeline</span><span class="kpi-label" style="margin:0;cursor:pointer" onclick="showView('pipeline')">View All →</span></div>
+        <div class="pipeline">
+          <div class="pipeline-stage">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="kpi-label" style="margin:0">Prospecting</span><span style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600" id="pp-pros">—</span></div>
+            <div class="pipeline-bar-bg"><div class="pipeline-bar-fill" id="bar-pros" style="width:0%"></div></div>
+          </div>
+          <div class="pipeline-stage" style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="kpi-label" style="margin:0">Offer Stage</span><span style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600" id="pp-offer">—</span></div>
+            <div class="pipeline-bar-bg"><div class="pipeline-bar-fill gold" id="bar-offer" style="width:0%"></div></div>
+          </div>
+          <div class="pipeline-stage" style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="kpi-label" style="margin:0">Under Contract</span><span style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600" id="pp-contract">—</span></div>
+            <div class="pipeline-bar-bg"><div class="pipeline-bar-fill" id="bar-contract" style="width:0%"></div></div>
+          </div>
+          <div class="pipeline-stage" style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="kpi-label" style="margin:0">Closed YTD</span><span style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600" id="pp-closed">—</span></div>
+            <div class="pipeline-bar-bg"><div class="pipeline-bar-fill light" id="bar-closed" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ LISTINGS ══════ -->
+    <div id="view-listings" class="view">
+      <div class="section-masthead fade-up">
+        <div><span class="section-eyebrow">Portfolio · Seller Listings</span><h1 class="section-headline">Active <em>Listings</em></h1></div>
+        <div class="section-count" id="listings-count">0</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap">
+        <select class="form-select" style="width:160px" id="filter-type" onchange="renderListingsGrid()">
+          <option value="all">All Types</option>
+          <option value="Luxury">Luxury</option>
+          <option value="Residential">Residential</option>
+          <option value="Commercial">Commercial</option>
+        </select>
+        <select class="form-select" style="width:160px" id="filter-status" onchange="renderListingsGrid()">
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="hot">Hot</option>
+          <option value="pending">Pending</option>
+          <option value="closed">Closed</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn btn-outline" onclick="showView('import')">↑ Import CSV</button>
+        <button class="btn btn-primary" onclick="openAddListingModal()">+ Add Listing</button>
+      </div>
+      <div id="listings-grid" class="photo-grid"></div>
+    </div>
+
+    <!-- ══════ BUYER PURCHASES ══════ -->
+    <div id="view-buyers" class="view">
+      <div class="section-masthead fade-up">
+        <div><span class="section-eyebrow">Portfolio · Buyer Side</span><h1 class="section-headline">Buyer <em>Purchases</em></h1></div>
+        <div class="section-count" id="buyers-count">0</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center">
+        <select class="form-select" style="width:180px" id="buyer-filter-status" onchange="renderBuyersGrid()">
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="contingent">Contingent</option>
+          <option value="closed">Closed</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn btn-blue" onclick="openAddBuyerModal()">+ Add Purchase</button>
+      </div>
+      <div id="buyers-grid" class="photo-grid"></div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div id="view-clients" class="view">
+      <div class="section-masthead fade-up">
+        <div><span class="section-eyebrow">CRM · Client Roster</span><h1 class="section-headline">Client <em>Profiles</em></h1></div>
+        <div class="section-count" id="clients-count">0</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center">
+        <select class="form-select" style="width:180px" id="client-filter-type" onchange="renderClientsGrid()">
+          <option value="all">All Types</option><option value="Buyer">Buyers</option>
+          <option value="Seller">Sellers</option><option value="Investor">Investors</option><option value="Both">Buyer &amp; Seller</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" onclick="openAddClientModal()">+ Add Client</button>
+      </div>
+      <div id="clients-grid" class="grid-3 fade-up"></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div id="view-pipeline" class="view">
+      <div class="section-masthead fade-up">
+        <div><span class="section-eyebrow">Deals · Live Pipeline</span><h1 class="section-headline">Deal <em>Flow</em></h1></div>
+        <div class="section-count" id="pipeline-total">$0</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <div id="pipeline-kpi" style="display:flex;gap:24px"></div>
+        <button class="btn btn-primary" onclick="openAddDealModal()">+ Add Deal</button>
+      </div>
+      <div id="pipeline-kanban" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:40px"></div>
+    </div>
+
+    <!-- CMA -->
+    <div id="view-cma" class="view">
+      <div class="section-masthead fade-up">
+        <div><span class="section-eyebrow">Intelligence · Pricing Analysis</span><h1 class="section-headline">CMA <em>Reports</em></h1></div>
+        <div class="section-count" id="cma-count">0</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+        <button class="btn btn-primary" onclick="openNewCMAModal()">+ New CMA Report</button>
+      </div>
+      <div id="cma-list"></div>
+    </div>
+
+    <!-- ══════ IMPORT ══════ -->
+    <div id="view-import" class="view">
+      <div class="section-masthead fade-up">
+        <div><span class="section-eyebrow">Data · CSV Import</span><h1 class="section-headline">Import <em>Listings</em></h1></div>
+      </div>
+      <div class="csv-template-box fade-up">
+        <div class="kpi-label" style="margin-bottom:12px">Expected CSV Columns for Listings</div>
+        <div>
+          <span class="csv-col-tag required">name ★</span><span class="csv-col-tag required">address ★</span><span class="csv-col-tag required">price ★</span>
+          <span class="csv-col-tag">type</span><span class="csv-col-tag">beds</span><span class="csv-col-tag">baths</span><span class="csv-col-tag">sqft</span>
+          <span class="csv-col-tag required">list_date ★</span><span class="csv-col-tag">status</span><span class="csv-col-tag photo">photo_url ◆</span>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
+          <button class="btn btn-outline" onclick="downloadTemplate()">↓ Download Template CSV</button>
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">★ = required &nbsp;|&nbsp; list_date format: YYYY-MM-DD</span>
+        </div>
+      </div>
+      <label class="import-zone fade-up" id="drop-zone">
+        <div style="font-size:40px;opacity:.3;margin-bottom:16px">📂</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;margin-bottom:8px">Drop your CSV file here</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px">or click to browse</div>
+        <button class="btn btn-accent" onclick="event.preventDefault();document.getElementById('csv-input').click()">Choose CSV File</button>
+        <input type="file" id="csv-input" accept=".csv" onchange="handleCSVFile(this.files[0])">
+      </label>
+      <div id="import-preview" style="display:none">
+        <div class="magazine-rule"><span class="magazine-rule-text">Preview — first 5 rows</span></div>
+        <div class="card fade-up" style="margin-bottom:24px;overflow-x:auto"><div id="preview-table-wrap"></div></div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <button class="btn btn-primary" onclick="confirmImport()">✓ Import All Rows</button>
+          <button class="btn btn-outline" onclick="cancelImport()">Cancel</button>
+          <span id="import-row-count" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ REPORT ══════ -->
+    <div id="view-report" class="view">
+      <div class="report-masthead fade-up">
+        <span class="report-vol">ESTATE Intelligence · Client Report</span>
+        <span class="report-main-title" id="rep-display-title">Property Report</span>
+        <span class="report-sub">Prepared with care &amp; precision</span>
+        <div class="report-accent-line"></div>
+        <span class="report-byline" id="report-byline">Prepared by Your Name</span>
+      </div>
+      <div id="report-content"></div>
+      <div style="text-align:center;padding:48px 0 24px">
+        <button class="btn btn-primary" onclick="window.print()">⊕ Print / Save PDF</button>
+        <button class="btn btn-outline" onclick="showView('dashboard')" style="margin-left:12px">← Back</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div>
+
+<!-- ══ ADD LISTING MODAL ══ -->
+<div class="modal-overlay" id="add-listing-modal">
+  <div class="modal">
+    <div class="modal-top">
+      <div>
+        <span class="section-eyebrow" id="listing-modal-eyebrow">New Listing</span>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-top:4px" id="listing-modal-title">Add Listing</div>
+      </div>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="listing-edit-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Property Name ★</label><input class="form-input" id="l-name" placeholder="e.g. The Meridian Penthouse"></div>
+        <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="l-addr" placeholder="e.g. 482 Vallejo St, SF"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">List Price ★</label><input class="form-input" id="l-price" type="number" placeholder="e.g. 4950000"></div>
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="l-type"><option>Luxury</option><option>Residential</option><option>Commercial</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Bedrooms</label><input class="form-input" id="l-beds" type="number" placeholder="4"></div>
+        <div class="form-group"><label class="form-label">Bathrooms</label><input class="form-input" id="l-baths" type="number" placeholder="3.5"></div>
+        <div class="form-group"><label class="form-label">Square Footage</label><input class="form-input" id="l-sqft" type="number" placeholder="3200"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">MLS List Date ★</label>
+          <input class="form-input" id="l-listdate" type="date">
+          <div class="form-hint">Days on Market is calculated automatically from this date.</div>
+        </div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="l-status"><option value="active">Active</option><option value="hot">Hot</option><option value="pending">Pending</option><option value="closed">Closed</option></select></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">MLS Photo URL ◆</label>
+        <input class="form-input" id="l-photo" type="url" placeholder="https://mlsimages.com/photo/listing.jpg">
+        <div class="form-hint">Paste the direct photo link from your MLS listing.</div>
+      </div>
+      <button class="btn btn-primary" onclick="saveListing()" style="width:100%;padding:14px;margin-top:4px" id="listing-save-btn">Add to Portfolio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD BUYER PURCHASE MODAL ══ -->
+<div class="modal-overlay" id="add-buyer-modal">
+  <div class="modal">
+    <div class="modal-top">
+      <div>
+        <span class="section-eyebrow" id="buyer-modal-eyebrow">New Purchase</span>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-top:4px" id="buyer-modal-title">Add Buyer Purchase</div>
+      </div>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="buyer-edit-id">
+
+      <span class="form-section-label">Property Details</span>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Property Name ★</label><input class="form-input" id="b-name" placeholder="e.g. 840 Greenwich St Unit 4B"></div>
+        <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="b-addr" placeholder="e.g. 840 Greenwich St, SF"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Purchase Price ★</label><input class="form-input" id="b-price" type="number" placeholder="e.g. 3250000"></div>
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="b-type"><option>Luxury</option><option>Residential</option><option>Commercial</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Bedrooms</label><input class="form-input" id="b-beds" type="number" placeholder="3"></div>
+        <div class="form-group"><label class="form-label">Bathrooms</label><input class="form-input" id="b-baths" type="number" placeholder="2"></div>
+        <div class="form-group"><label class="form-label">Square Footage</label><input class="form-input" id="b-sqft" type="number" placeholder="2100"></div>
+      </div>
+
+      <span class="form-section-label">Transaction Details</span>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="b-status" onchange="toggleCOEField()">
+            <option value="pending">Pending</option>
+            <option value="contingent">Contingent</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Close of Escrow Date</label><input class="form-input" id="b-coe" type="date"></div>
+      </div>
+
+      <span class="form-section-label">Contingencies</span>
+      <div id="contingency-builder">
+        <div class="contingency-row">
+          <select class="form-select" id="cont-type" style="flex:1">
+            <option value="">Select contingency type…</option>
+            <option>Inspection</option>
+            <option>Loan / Financing</option>
+            <option>Appraisal</option>
+            <option>Title</option>
+            <option>HOA Documents</option>
+            <option>Sale of Buyer's Property</option>
+            <option>Custom…</option>
+          </select>
+          <input class="form-input days-input" id="cont-days" type="number" placeholder="Days" min="1" max="90">
+          <button class="btn btn-outline" onclick="addContingency()" style="padding:10px 16px;font-size:10px">+ Add</button>
+        </div>
+        <div id="custom-cont-wrap" style="display:none;margin-bottom:10px">
+          <input class="form-input" id="cont-custom-name" placeholder="Enter custom contingency name">
+        </div>
+        <div id="contingency-list" class="contingency-list"></div>
+        <div class="form-hint" style="margin-top:4px">Add each contingency and its removal deadline in days.</div>
+      </div>
+
+      <span class="form-section-label">Photo</span>
+      <div class="form-group">
+        <label class="form-label">MLS Photo URL ◆</label>
+        <input class="form-input" id="b-photo" type="url" placeholder="https://mlsimages.com/photo/listing.jpg">
+        <div class="form-hint">Paste the direct MLS photo link for this property.</div>
+      </div>
+
+      <button class="btn btn-blue" onclick="saveBuyer()" style="width:100%;padding:14px;margin-top:4px" id="buyer-save-btn">Add Purchase</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LISTING DETAIL MODAL ══ -->
+<div class="modal-overlay" id="detail-listing-modal">
+  <div class="modal" style="width:720px">
+    <div class="modal-top" style="padding:20px 28px">
+      <div>
+        <span class="section-eyebrow" id="dl-eyebrow">Property Detail</span>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:2px" id="dl-name"></div>
+      </div>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div id="dl-photo-wrap"></div>
+    <div class="detail-stats" id="dl-stats"></div>
+    <div style="padding:20px 28px">
+      <div class="form-group">
+        <label class="form-label">MLS Photo URL — update anytime</label>
+        <div style="display:flex;gap:8px">
+          <input class="photo-url-input" id="dl-photo-url" type="url" placeholder="Paste MLS photo link…">
+          <button class="btn btn-accent" style="padding:8px 16px;font-size:10px" onclick="updateListingPhoto()">Update</button>
+        </div>
+        <div class="form-hint">Saves instantly to your browser.</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-outline" onclick="editCurrentListing()" style="flex:1">✎ Edit Details</button>
+        <button class="btn btn-danger" onclick="deleteCurrentListing()">✕ Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BUYER DETAIL MODAL ══ -->
+<div class="modal-overlay" id="detail-buyer-modal">
+  <div class="modal" style="width:720px">
+    <div class="modal-top" style="padding:20px 28px">
+      <div>
+        <span class="section-eyebrow" id="db-eyebrow">Buyer Purchase Detail</span>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:2px" id="db-name"></div>
+      </div>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div id="db-photo-wrap"></div>
+    <div class="detail-stats" id="db-stats"></div>
+    <div style="padding:20px 28px">
+      <div id="db-contingencies" style="margin-bottom:16px"></div>
+      <div class="form-group">
+        <label class="form-label">MLS Photo URL — update anytime</label>
+        <div style="display:flex;gap:8px">
+          <input class="photo-url-input" id="db-photo-url" type="url" placeholder="Paste MLS photo link…">
+          <button class="btn btn-accent" style="padding:8px 16px;font-size:10px" onclick="updateBuyerPhoto()">Update</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-outline" onclick="editCurrentBuyer()" style="flex:1">✎ Edit Details</button>
+        <button class="btn btn-danger" onclick="deleteCurrentBuyer()">✕ Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REPORT MODAL ══ -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal">
+    <div class="modal-top">
+      <div><span class="section-eyebrow">Generate</span><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-top:4px">Client Report</div></div>
+      <button class="modal-close" onclick="closeModals()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Report Title</label><input class="form-input" id="rep-title" value="Property Intelligence Report"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Client Name</label><input class="form-input" id="rep-client" placeholder="e.g. Eleanor Hartwell"></div>
+        <div class="form-group"><label class="form-label">Report Type</label>
+          <select class="form-select" id="rep-sections">
+            <option value="full">Full Report (Listings + Buyers)</option>
+            <option value="listings">Seller Listings Only</option>
+            <option value="buyers">Buyer Purchases Only</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Filter Listings by Type</label>
+        <select class="form-select" id="rep-type-filter">
+          <option value="all">All Types</option>
+          <option value="Luxury">Luxury Only</option>
+          <option value="Residential">Residential Only</option>
+          <option value="Commercial">Commercial Only</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="generateReport()" style="width:100%;padding:14px;margin-top:8px">Generate Report →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CLIENT MODAL -->
+<div class="modal-overlay" id="add-client-modal">
+  <div class="modal">
+    <div class="modal-top"><div><span class="section-eyebrow" id="client-modal-eyebrow">New Client</span><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-top:4px" id="client-modal-title">Add Client</div></div><button class="modal-close" onclick="closeModals()">x</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="client-edit-id">
+      <div class="form-row"><div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="c-name" placeholder="Eleanor Hartwell"></div><div class="form-group"><label class="form-label">Type</label><select class="form-select" id="c-type"><option>Buyer</option><option>Seller</option><option>Investor</option><option>Both</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="c-phone" type="tel" placeholder="(415) 555-0100"></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email" placeholder="client@email.com"></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Budget Range</label><input class="form-input" id="c-budget" placeholder="e.g. $4M - $6M"></div><div class="form-group"><label class="form-label">Pre-Approval</label><select class="form-select" id="c-preapproval"><option value="">Not Started</option><option>Pre-Qualified</option><option>Pre-Approved</option><option>Full Approval</option><option>Cash Buyer</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Preferred Neighborhoods</label><input class="form-input" id="c-neighborhoods" placeholder="Pacific Heights, Marina"></div><div class="form-group"><label class="form-label">Referral Source</label><input class="form-input" id="c-referral" placeholder="Past client, Open House"></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Birthday</label><input class="form-input" id="c-birthday" type="date"></div><div class="form-group"><label class="form-label">Anniversary</label><input class="form-input" id="c-anniversary" type="date"></div></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="c-notes" placeholder="Preferences, must-haves, deal notes..."></textarea></div>
+      <button class="btn btn-primary" onclick="saveClient()" style="width:100%;padding:14px;margin-top:4px" id="client-save-btn">Add Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD DEAL MODAL -->
+<div class="modal-overlay" id="add-deal-modal">
+  <div class="modal">
+    <div class="modal-top"><div><span class="section-eyebrow" id="deal-modal-eyebrow">New Deal</span><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-top:4px" id="deal-modal-title">Add Pipeline Deal</div></div><button class="modal-close" onclick="closeModals()">x</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="deal-edit-id">
+      <div class="form-row"><div class="form-group"><label class="form-label">Deal Name</label><input class="form-input" id="d-name" placeholder="Hartwell - 482 Vallejo"></div><div class="form-group"><label class="form-label">Stage</label><select class="form-select" id="d-stage"><option value="Prospecting">Prospecting</option><option value="Active">Active</option><option value="Offer Submitted">Offer Submitted</option><option value="Under Contract">Under Contract</option><option value="Closed">Closed</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Deal Value ($)</label><input class="form-input" id="d-value" type="number" placeholder="4950000"></div><div class="form-group"><label class="form-label">Client Name</label><input class="form-input" id="d-client" placeholder="Eleanor Hartwell" list="client-names-list"><datalist id="client-names-list"></datalist></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Property Address</label><input class="form-input" id="d-addr" placeholder="482 Vallejo St, SF"></div><div class="form-group"><label class="form-label">Expected Close Date</label><input class="form-input" id="d-close" type="date"></div></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="d-notes" placeholder="Deal notes, next steps..."></textarea></div>
+      <button class="btn btn-primary" onclick="saveDeal()" style="width:100%;padding:14px;margin-top:4px" id="deal-save-btn">Add Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT DETAIL -->
+<div class="modal-overlay" id="detail-client-modal">
+  <div class="modal" style="width:600px">
+    <div class="modal-top" style="padding:20px 28px"><div><span class="section-eyebrow" id="dc-eyebrow">Client</span><div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:2px" id="dc-name"></div></div><button class="modal-close" onclick="closeModals()">x</button></div>
+    <div id="dc-body" style="padding:24px 28px"></div>
+  </div>
+</div>
+
+<!-- DEAL DETAIL -->
+<div class="modal-overlay" id="detail-deal-modal">
+  <div class="modal" style="width:520px">
+    <div class="modal-top" style="padding:20px 28px"><div><span class="section-eyebrow" id="dd-eyebrow">Deal</span><div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-top:2px" id="dd-name"></div></div><button class="modal-close" onclick="closeModals()">x</button></div>
+    <div id="dd-body" style="padding:24px 28px"></div>
+  </div>
+</div>
+
+<!-- CMA MODAL -->
+<div class="modal-overlay" id="cma-modal">
+  <div class="modal" style="width:800px;max-width:95vw">
+    <div class="modal-top"><div><span class="section-eyebrow" id="cma-modal-eyebrow">New CMA</span><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-top:4px" id="cma-modal-title">Competitive Market Analysis</div></div><button class="modal-close" onclick="closeModals()">x</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="cma-edit-id">
+      <div class="form-row"><div class="form-group"><label class="form-label">Subject Address</label><input class="form-input" id="cma-addr" placeholder="482 Vallejo St, San Francisco"></div><div class="form-group"><label class="form-label">Type</label><select class="form-select" id="cma-type"><option>Residential</option><option>Luxury</option><option>Commercial</option></select></div></div>
+      <div class="form-row-3"><div class="form-group"><label class="form-label">Bedrooms</label><input class="form-input" id="cma-beds" type="number" placeholder="4"></div><div class="form-group"><label class="form-label">Bathrooms</label><input class="form-input" id="cma-baths" type="number" placeholder="3"></div><div class="form-group"><label class="form-label">Square Footage</label><input class="form-input" id="cma-sqft" type="number" placeholder="3200" oninput="recalcCMA()"></div></div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--accent);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">COMPARABLE SALES</div>
+      <div class="comp-header-row"><span>Address</span><span>Sold Price</span><span>Sq Ft</span><span>Bed</span><span>Bath</span><span>$/SqFt</span><span></span></div>
+      <div id="comp-rows"></div>
+      <button class="btn btn-outline" onclick="addCompRow()" style="margin-top:8px;font-size:10px;padding:7px 16px">+ Add Comparable</button>
+      <div class="form-group" style="margin-top:18px"><label class="form-label">Notes / Adjustments</label><textarea class="form-textarea" id="cma-notes" placeholder="Market conditions, adjustments, rationale..."></textarea></div>
+      <div id="cma-result-preview" style="display:none" class="cma-result-bar">
+        <div><div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--warm-mid)">SUGGESTED LIST PRICE RANGE</div><div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;margin-top:4px" id="cma-range-display">-</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--warm-mid);margin-top:4px" id="cma-range-sub">0 comparables</div></div>
+        <div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--warm-mid)">AVG $/SQFT</div><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;margin-top:4px" id="cma-ppsf-display">-</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="saveCMA()" style="width:100%;padding:14px;margin-top:14px" id="cma-save-btn">Save CMA Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING_MARKER -->
+<div class="modal-overlay" id="onboard-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-top">
+      <div><span class="section-eyebrow">Welcome</span><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-top:4px">Set up your CRM</div></div>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.7">Just two details to personalise your reports and sidebar.</p>
+      <div class="form-group"><label class="form-label">Your Full Name</label><input class="form-input" id="onboard-name" placeholder="e.g. Sarah Mitchell"></div>
+      <div class="form-group"><label class="form-label">Your Title</label><input class="form-input" id="onboard-title" placeholder="e.g. Senior Broker, Realtor®"></div>
+      <button class="btn btn-primary" onclick="saveOnboarding()" style="width:100%;padding:14px">Get Started →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════ SUPABASE ═══════════════════════════
+const SUPA_URL = 'https://qkbwoacnmcfkxrpqmqqc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrYndvYWNubWNma3hycHFtcXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTMwOTQsImV4cCI6MjA4NzM4OTA5NH0.eiCc-plTJK8C-LNdg5v51HPoqZIHQi7TZ8geRwnc-zc';
+
+const hdrs = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': 'Bearer ' + SUPA_KEY,
+  'Prefer': 'return=representation'
+};
+
+async function sbFetch(table) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=created_at.desc`, { headers: hdrs });
+  if (!r.ok) { console.error('sbFetch error', await r.text()); return []; }
+  return r.json();
+}
+async function sbInsert(table, row) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, { method:'POST', headers: hdrs, body: JSON.stringify(row) });
+  if (!r.ok) throw new Error('Insert failed: ' + await r.text());
+  const data = await r.json(); return Array.isArray(data) ? data[0] : data;
+}
+async function sbUpdate(table, id, row) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, { method:'PATCH', headers: hdrs, body: JSON.stringify(row) });
+  if (!r.ok) throw new Error('Update failed: ' + await r.text());
+  const data = await r.json(); return Array.isArray(data) ? data[0] : data;
+}
+async function sbDelete(table, id) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, { method:'DELETE', headers: hdrs });
+  if (!r.ok) throw new Error('Delete failed: ' + await r.text());
+}
+
+// Broker name stays in browser storage (not sensitive data)
+const SK = { broker: 'estate_broker_v1' };
+async function loadBroker(key, fallback) {
+  try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : fallback; }
+  catch { return fallback; }
+}
+async function persistBroker(key, data) {
+  try { await window.storage.set(key, JSON.stringify(data)); } catch(e) {}
+}
+
+// ═══════════════════════════ STATE ═══════════════════════════
+let listings=[], buyers=[], clients=[], pipelineDeals=[], cmaReports=[], pendingCSV=null;
+let currentListingId = null, currentBuyerId = null;
+let tempContingencies = []; // for the add/edit buyer modal
+
+
+// ═══════════════════════════ UTILS ═══════════════════════════
+const fmt = n => '$' + Number(n).toLocaleString();
+const uid = () => Date.now() + Math.random();
+const today = () => new Date();
+
+function calcDOM(listDate) {
+  if (!listDate) return null;
+  const d = new Date(listDate);
+  if (isNaN(d)) return null;
+  const diff = Math.floor((today() - d) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diff);
+}
+
+function domBadge(listDate) {
+  const dom = calcDOM(listDate);
+  if (dom === null) return '<span class="dom-badge">—</span>';
+  let cls = '';
+  if (dom > 60) cls = 'urgent';
+  else if (dom > 30) cls = 'warn';
+  return `<span class="dom-badge ${cls}">${dom}d</span>`;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function daysUntil(d) {
+  if (!d) return null;
+  const diff = Math.ceil((new Date(d + 'T12:00:00') - today()) / (1000*60*60*24));
+  return diff;
+}
+
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast '+type+' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function photoBlock(url, cls='listing-photo') {
+  if (url) return `<img src="${url}" class="${cls}" onerror="this.style.display='none';this.nextSibling.style.display='flex';" loading="lazy"><div class="${cls}-placeholder" style="display:none"><span>Photo unavailable</span></div>`;
+  return `<div class="${cls}-placeholder"><span>No Photo</span><span style="font-size:20px;opacity:.25;margin-top:4px">⊡</span></div>`;
+}
+
+// ═══════════════════════════ NAV ═══════════════════════════
+const META = {
+  dashboard:['DASHBOARD — OVERVIEW','Portfolio at a Glance'],
+  listings:['PORTFOLIO — LISTINGS','Seller Listings'],
+  buyers:['PORTFOLIO — BUYER SIDE','Buyer Purchases'],
+  clients:['CRM — CLIENTS','Client Profiles'],
+  pipeline:['DEALS — PIPELINE','Deal Pipeline'],
+  cma:['INTELLIGENCE — CMA','CMA Reports'],
+  import:['DATA — CSV IMPORT','Import Listings'],
+  report:['REPORT — PREVIEW','Client Report'],
+};
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const m = META[name]||['',''];
+  document.getElementById('topbar-issue').textContent = m[0];
+  document.getElementById('topbar-title').textContent = m[1];
+  const ab = document.getElementById('topbar-add-btn');
+  if(name==='buyers'){ab.textContent='+ Add Purchase';ab.onclick=openAddBuyerModal;ab.className='btn btn-blue';}
+  else if(name==='clients'){ab.textContent='+ Add Client';ab.onclick=openAddClientModal;ab.className='btn btn-primary';}
+  else if(name==='pipeline'){ab.textContent='+ Add Deal';ab.onclick=openAddDealModal;ab.className='btn btn-primary';}
+  else if(name==='cma'){ab.textContent='+ New CMA';ab.onclick=openNewCMAModal;ab.className='btn btn-primary';}
+  else{ab.textContent='+ Add Listing';ab.onclick=openAddListingModal;ab.className='btn btn-primary';}
+  closeModals();
+  if(name==='listings') renderListingsGrid();
+  if(name==='buyers') renderBuyersGrid();
+  if(name==='clients') renderClientsGrid();
+  if(name==='pipeline') renderPipeline();
+  if(name==='cma') renderCMAList();
+}
+
+// ═══════════════════════════ DASHBOARD ═══════════════════════════
+function renderDashboard() {
+  const active = listings.filter(l => l.status !== 'closed');
+  const totalVal = listings.reduce((s,l) => s+l.price, 0);
+  const avgDOM = listings.filter(l=>l.listDate).length
+    ? Math.round(listings.filter(l=>l.listDate).reduce((s,l)=>s+(calcDOM(l.listDate)||0),0) / listings.filter(l=>l.listDate).length)
+    : 0;
+
+  document.getElementById('dash-count').textContent = listings.length + buyers.length;
+  document.getElementById('dash-kpi').innerHTML = `
+    <div class="kpi-cell"><span class="kpi-label">Active Listings</span><span class="kpi-value">${active.length}</span></div>
+    <div class="kpi-cell"><span class="kpi-label">Portfolio Value</span><span class="kpi-value">${totalVal>=1e6?(totalVal/1e6).toFixed(1)+'M':fmt(totalVal)||'—'}</span></div>
+    <div class="kpi-cell"><span class="kpi-label">Buyer Purchases</span><span class="kpi-value">${buyers.length}</span></div>
+    <div class="kpi-cell"><span class="kpi-label">Avg Days on Market</span><span class="kpi-value">${listings.filter(l=>l.listDate).length ? avgDOM+'d' : '—'}</span></div>`;
+
+  document.getElementById('dash-listings-tb').innerHTML = listings.slice(0,5).map(l=>`
+    <tr onclick="openListingDetail(${l.id})" style="cursor:pointer">
+      <td><span class="prop-name">${l.name}</span><span class="prop-addr">${l.addr}</span></td>
+      <td><span class="price-val">${fmt(l.price)}</span></td>
+      <td>${domBadge(l.listDate)}</td>
+      <td><span class="status-pill ${l.status}">${l.status}</span></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);font-family:\'DM Mono\',monospace;font-size:11px;padding:24px">No listings yet</td></tr>';
+
+  document.getElementById('dash-buyers-tb').innerHTML = buyers.slice(0,5).map(b=>`
+    <tr onclick="openBuyerDetail(${b.id})" style="cursor:pointer">
+      <td><span class="prop-name">${b.name}</span><span class="prop-addr">${b.addr}</span></td>
+      <td><span class="price-val">${fmt(b.price)}</span></td>
+      <td><span class="status-pill ${b.status}">${b.status}</span></td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--muted);font-family:\'DM Mono\',monospace;font-size:11px;padding:24px">No purchases yet</td></tr>';
+
+  // pipeline bars
+  const sum = s => pipelineDeals.filter(d=>d.stage===s).reduce((a,d)=>a+d.value,0);
+  const pv = { p:sum('Prospecting'), o:sum('Offer Stage'), c:sum('Under Contract'), cl:sum('Closed') };
+  const maxV = Math.max(...Object.values(pv), 1);
+  ['pros','offer','contract','closed'].forEach((k,i) => {
+    const vals = [pv.p, pv.o, pv.c, pv.cl];
+    const ids  = ['pp-pros','pp-offer','pp-contract','pp-closed'];
+    const bars = ['bar-pros','bar-offer','bar-contract','bar-closed'];
+    document.getElementById(ids[i]).textContent = vals[i] ? fmt(vals[i]) : '—';
+    document.getElementById(bars[i]).style.width = Math.round(vals[i]/maxV*100)+'%';
+  });
+}
+
+// ═══════════════════════════ LISTINGS ═══════════════════════════
+function renderListingsGrid() {
+  const tf = document.getElementById('filter-type')?.value||'all';
+  const sf = document.getElementById('filter-status')?.value||'all';
+  let data = listings;
+  if (tf!=='all') data=data.filter(l=>l.type===tf);
+  if (sf!=='all') data=data.filter(l=>l.status===sf);
+  document.getElementById('listings-count').textContent = data.length;
+  const grid = document.getElementById('listings-grid');
+  if (!data.length) {
+    grid.innerHTML=`<div class="empty-state"><div class="empty-state-title">No listings found</div><div class="empty-state-sub">Import a CSV or add listings manually</div></div>`; return;
+  }
+  grid.innerHTML = data.map(l => {
+    const dom = calcDOM(l.listDate);
+    const domTxt = dom !== null ? `${dom}d on market` : '';
+    return `<div class="listing-card fade-up" onclick="openListingDetail(${l.id})">
+      ${photoBlock(l.photo)}
+      <div class="listing-card-body">
+        <div class="listing-card-name">${l.name}</div>
+        <div class="listing-card-addr">${l.addr}</div>
+        <div class="listing-card-price">${fmt(l.price)}</div>
+        ${l.beds?`<div class="listing-card-meta"><span>${l.beds} bed</span><span>${l.baths} bath</span><span>${Number(l.sqft||0).toLocaleString()} sqft</span></div>`:''}
+        <div class="listing-card-footer">
+          <span class="status-pill ${l.status}">${l.status}</span>
+          <span class="tag">${l.type}</span>
+          ${domTxt?`<span class="dom-badge ${dom>60?'urgent':dom>30?'warn':''}">${domTxt}</span>`:''}
+        </div>
+        ${l.listDate?`<div style="margin-top:8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Listed ${fmtDate(l.listDate)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openListingDetail(id) {
+  const l = listings.find(x=>x.id===id); if(!l) return;
+  currentListingId = id;
+  const dom = calcDOM(l.listDate);
+  document.getElementById('dl-eyebrow').textContent = l.type+' · '+l.status.toUpperCase();
+  document.getElementById('dl-name').textContent = l.name;
+  document.getElementById('dl-photo-wrap').innerHTML = l.photo
+    ? `<img src="${l.photo}" class="detail-photo" loading="lazy">`
+    : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid);letter-spacing:2px">NO PHOTO — paste MLS URL below</span></div>`;
+  document.getElementById('dl-photo-url').value = l.photo||'';
+  document.getElementById('dl-stats').innerHTML = `
+    <div class="detail-stat"><span class="kpi-label">List Price</span><span class="price-val" style="font-size:20px">${fmt(l.price)}</span></div>
+    <div class="detail-stat"><span class="kpi-label">Beds / Baths</span><span class="price-val" style="font-size:18px">${l.beds?l.beds+' / '+l.baths:'—'}</span></div>
+    <div class="detail-stat"><span class="kpi-label">Square Feet</span><span class="price-val" style="font-size:18px">${l.sqft?Number(l.sqft).toLocaleString():'—'}</span></div>
+    <div class="detail-stat"><span class="kpi-label">Days on Market</span><span class="price-val" style="font-size:18px">${dom!==null?dom+'d':'—'}</span>${l.listDate?`<span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;display:block">Listed ${fmtDate(l.listDate)}</span>`:''}</div>`;
+  document.getElementById('detail-listing-modal').classList.add('open');
+}
+
+async function updateListingPhoto() {
+  const url = document.getElementById('dl-photo-url').value.trim();
+  const idx = listings.findIndex(x=>x.id===currentListingId); if(idx===-1) return;
+  try {
+    await sbUpdate('listings', currentListingId, {photo: url||null});
+    listings[idx].photo = url||null;
+    document.getElementById('dl-photo-wrap').innerHTML = url
+      ? `<img src="${url}" class="detail-photo" loading="lazy">`
+      : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid)">NO PHOTO</span></div>`;
+    renderListingsGrid(); renderDashboard(); toast('Photo URL saved');
+  } catch(e) { toast('Update failed','error'); }
+}
+
+function editCurrentListing() {
+  const l = listings.find(x=>x.id===currentListingId); if(!l) return;
+  closeModals();
+  document.getElementById('listing-modal-eyebrow').textContent='Edit Listing';
+  document.getElementById('listing-modal-title').textContent='Edit Listing';
+  document.getElementById('listing-save-btn').textContent='Save Changes';
+  document.getElementById('listing-edit-id').value=l.id;
+  document.getElementById('l-name').value=l.name;
+  document.getElementById('l-addr').value=l.addr;
+  document.getElementById('l-price').value=l.price;
+  document.getElementById('l-type').value=l.type;
+  document.getElementById('l-beds').value=l.beds||'';
+  document.getElementById('l-baths').value=l.baths||'';
+  document.getElementById('l-sqft').value=l.sqft||'';
+  document.getElementById('l-listdate').value=l.listDate||'';
+  document.getElementById('l-status').value=l.status;
+  document.getElementById('l-photo').value=l.photo||'';
+  document.getElementById('add-listing-modal').classList.add('open');
+}
+
+async function deleteCurrentListing() {
+  if(!confirm('Remove this listing?')) return;
+  try {
+    await sbDelete('listings', currentListingId);
+    listings=listings.filter(x=>x.id!==currentListingId);
+    closeModals(); renderListingsGrid(); renderDashboard(); toast('Listing removed');
+  } catch(e) { toast('Delete failed','error'); }
+}
+
+function openAddListingModal() {
+  document.getElementById('listing-modal-eyebrow').textContent='New Listing';
+  document.getElementById('listing-modal-title').textContent='Add Listing';
+  document.getElementById('listing-save-btn').textContent='Add to Portfolio';
+  document.getElementById('listing-edit-id').value='';
+  ['l-name','l-addr','l-price','l-beds','l-baths','l-sqft','l-listdate','l-photo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('l-status').value='active';
+  document.getElementById('l-type').value='Luxury';
+  document.getElementById('add-listing-modal').classList.add('open');
+}
+
+async function saveListing() {
+  const name=document.getElementById('l-name').value.trim();
+  const price=parseFloat(document.getElementById('l-price').value);
+  if(!name||!price){toast('Name and price are required','error');return;}
+  const editId=document.getElementById('listing-edit-id').value;
+  const row={
+    name, addr:document.getElementById('l-addr').value.trim(), price,
+    type:document.getElementById('l-type').value,
+    beds:document.getElementById('l-beds').value||null,
+    baths:document.getElementById('l-baths').value||null,
+    sqft:document.getElementById('l-sqft').value||null,
+    list_date:document.getElementById('l-listdate').value||null,
+    status:document.getElementById('l-status').value,
+    photo:document.getElementById('l-photo').value.trim()||null,
+  };
+  try {
+    if(editId){
+      const updated = await sbUpdate('listings', editId, row);
+      listings=listings.map(l=>l.id===editId?(mapListing(updated||{...row,id:editId})):l);
+      toast('Listing updated');
+    } else {
+      const created = await sbInsert('listings', row);
+      const mapped = mapListing(created||{...row,id:uid()});
+      listings.unshift(mapped);
+      toast('Listing added');
+    }
+    closeModals(); renderDashboard(); renderListingsGrid();
+  } catch(e) { toast('Save failed — check your connection','error'); console.error(e); }
+}
+
+// ═══════════════════════════ BUYERS ═══════════════════════════
+function renderBuyersGrid() {
+  const sf = document.getElementById('buyer-filter-status')?.value||'all';
+  let data = sf==='all' ? buyers : buyers.filter(b=>b.status===sf);
+  document.getElementById('buyers-count').textContent = data.length;
+  const grid = document.getElementById('buyers-grid');
+  if(!data.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-state-title">No purchases yet</div><div class="empty-state-sub">Add buyer purchases with the button above</div></div>`; return;
+  }
+  grid.innerHTML = data.map(b => {
+    const coeD = daysUntil(b.coe);
+    const coeTxt = b.coe ? (coeD >= 0 ? `COE in ${coeD}d` : `COE ${Math.abs(coeD)}d ago`) : '';
+    const coeCls = coeD !== null && coeD <= 7 && coeD >= 0 ? 'urgent' : '';
+    const contCount = (b.contingencies||[]).length;
+    return `<div class="listing-card buyer-card fade-up" onclick="openBuyerDetail(${b.id})">
+      ${photoBlock(b.photo)}
+      <div class="listing-card-body">
+        <div class="listing-card-name">${b.name}</div>
+        <div class="listing-card-addr">${b.addr}</div>
+        <div class="listing-card-price">${fmt(b.price)}</div>
+        ${b.beds?`<div class="listing-card-meta"><span>${b.beds} bed</span><span>${b.baths} bath</span><span>${Number(b.sqft||0).toLocaleString()} sqft</span></div>`:''}
+        <div class="listing-card-footer">
+          <span class="status-pill ${b.status}">${b.status}</span>
+          ${coeTxt?`<span class="dom-badge ${coeCls}">${coeTxt}</span>`:''}
+        </div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+          ${(b.contingencies||[]).slice(0,3).map(c=>`<span class="contingency-chip">${c.name}<span class="days">${c.days}d</span></span>`).join('')}
+          ${contCount>3?`<span class="contingency-chip">+${contCount-3} more</span>`:''}
+        </div>
+        ${b.coe?`<div style="margin-top:8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Close of Escrow: ${fmtDate(b.coe)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openBuyerDetail(id) {
+  const b = buyers.find(x=>x.id===id); if(!b) return;
+  currentBuyerId = id;
+  const coeD = daysUntil(b.coe);
+  document.getElementById('db-eyebrow').textContent = b.type+' · '+b.status.toUpperCase();
+  document.getElementById('db-name').textContent = b.name;
+  document.getElementById('db-photo-wrap').innerHTML = b.photo
+    ? `<img src="${b.photo}" class="detail-photo" loading="lazy">`
+    : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid);letter-spacing:2px">NO PHOTO — paste MLS URL below</span></div>`;
+  document.getElementById('db-photo-url').value = b.photo||'';
+  document.getElementById('db-stats').innerHTML = `
+    <div class="detail-stat"><span class="kpi-label">Purchase Price</span><span class="price-val" style="font-size:20px">${fmt(b.price)}</span></div>
+    <div class="detail-stat"><span class="kpi-label">Beds / Baths</span><span class="price-val" style="font-size:18px">${b.beds?b.beds+' / '+b.baths:'—'}</span></div>
+    <div class="detail-stat"><span class="kpi-label">Square Feet</span><span class="price-val" style="font-size:18px">${b.sqft?Number(b.sqft).toLocaleString():'—'}</span></div>
+    <div class="detail-stat"><span class="kpi-label">Close of Escrow</span><span class="price-val" style="font-size:15px">${b.coe?fmtDate(b.coe):'—'}</span>${coeD!==null?`<span style="font-family:'DM Mono',monospace;font-size:9px;color:${coeD<=7?'var(--red)':'var(--muted)'};margin-top:4px;display:block">${coeD>=0?'In '+coeD+'d':Math.abs(coeD)+'d ago'}</span>`:''}</div>`;
+
+  const conts = b.contingencies||[];
+  document.getElementById('db-contingencies').innerHTML = conts.length
+    ? `<div class="kpi-label" style="margin-bottom:10px">Contingencies (${conts.length})</div><div style="display:flex;flex-wrap:wrap;gap:6px">${conts.map(c=>`<span class="contingency-chip">${c.name}<span class="days">${c.days}d to remove</span></span>`).join('')}</div>`
+    : '';
+  document.getElementById('detail-buyer-modal').classList.add('open');
+}
+
+function updateBuyerPhoto() {
+  const url = document.getElementById('db-photo-url').value.trim();
+  const idx = buyers.findIndex(x=>x.id===currentBuyerId); if(idx===-1) return;
+  buyers[idx].photo = url||null;
+  document.getElementById('db-photo-wrap').innerHTML = url
+    ? `<img src="${url}" class="detail-photo" loading="lazy">`
+    : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid)">NO PHOTO</span></div>`;
+  renderBuyersGrid(); renderDashboard(); toast('Photo URL saved');
+}
+
+function editCurrentBuyer() {
+  const b = buyers.find(x=>x.id===currentBuyerId); if(!b) return;
+  closeModals();
+  tempContingencies = JSON.parse(JSON.stringify(b.contingencies||[]));
+  document.getElementById('buyer-modal-eyebrow').textContent='Edit Purchase';
+  document.getElementById('buyer-modal-title').textContent='Edit Buyer Purchase';
+  document.getElementById('buyer-save-btn').textContent='Save Changes';
+  document.getElementById('buyer-edit-id').value=b.id;
+  document.getElementById('b-name').value=b.name;
+  document.getElementById('b-addr').value=b.addr;
+  document.getElementById('b-price').value=b.price;
+  document.getElementById('b-type').value=b.type;
+  document.getElementById('b-beds').value=b.beds||'';
+  document.getElementById('b-baths').value=b.baths||'';
+  document.getElementById('b-sqft').value=b.sqft||'';
+  document.getElementById('b-status').value=b.status;
+  document.getElementById('b-coe').value=b.coe||'';
+  document.getElementById('b-photo').value=b.photo||'';
+  renderContingencyList();
+  document.getElementById('add-buyer-modal').classList.add('open');
+}
+
+async function deleteCurrentBuyer() {
+  if(!confirm('Remove this buyer purchase?')) return;
+  try {
+    await sbDelete('buyers', currentBuyerId);
+    buyers=buyers.filter(x=>x.id!==currentBuyerId);
+    closeModals(); renderBuyersGrid(); renderDashboard(); toast('Purchase removed');
+  } catch(e) { toast('Delete failed','error'); }
+}
+
+// ── contingency builder ──
+function toggleCOEField() {
+  // nothing to toggle — COE is always visible
+}
+
+document.getElementById('cont-type').addEventListener('change', function() {
+  document.getElementById('custom-cont-wrap').style.display = this.value==='Custom…'?'block':'none';
+});
+
+function addContingency() {
+  const typeEl = document.getElementById('cont-type');
+  const daysEl = document.getElementById('cont-days');
+  let name = typeEl.value==='Custom…' ? document.getElementById('cont-custom-name').value.trim() : typeEl.value;
+  const days = parseInt(daysEl.value);
+  if(!name||!days){toast('Select a contingency type and enter days','error');return;}
+  tempContingencies.push({name, days});
+  typeEl.value=''; daysEl.value='';
+  document.getElementById('custom-cont-wrap').style.display='none';
+  document.getElementById('cont-custom-name').value='';
+  renderContingencyList();
+}
+
+function removeContingency(i) {
+  tempContingencies.splice(i,1);
+  renderContingencyList();
+}
+
+function renderContingencyList() {
+  document.getElementById('contingency-list').innerHTML = tempContingencies.map((c,i)=>`
+    <div class="contingency-item">
+      <div>
+        <span class="contingency-item-name">${c.name}</span>
+        <span class="contingency-item-days" style="margin-left:12px">${c.days} days to remove</span>
+      </div>
+      <button class="contingency-remove" onclick="removeContingency(${i})">×</button>
+    </div>`).join('');
+}
+
+function openAddBuyerModal() {
+  tempContingencies=[];
+  document.getElementById('buyer-modal-eyebrow').textContent='New Purchase';
+  document.getElementById('buyer-modal-title').textContent='Add Buyer Purchase';
+  document.getElementById('buyer-save-btn').textContent='Add Purchase';
+  document.getElementById('buyer-edit-id').value='';
+  ['b-name','b-addr','b-price','b-beds','b-baths','b-sqft','b-coe','b-photo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('b-status').value='pending';
+  document.getElementById('b-type').value='Residential';
+  document.getElementById('cont-type').value='';
+  document.getElementById('cont-days').value='';
+  renderContingencyList();
+  document.getElementById('add-buyer-modal').classList.add('open');
+}
+
+async function saveBuyer() {
+  const name=document.getElementById('b-name').value.trim();
+  const price=parseFloat(document.getElementById('b-price').value);
+  if(!name||!price){toast('Name and purchase price are required','error');return;}
+  const editId=document.getElementById('buyer-edit-id').value;
+  const row={
+    name, addr:document.getElementById('b-addr').value.trim(), price,
+    type:document.getElementById('b-type').value,
+    beds:document.getElementById('b-beds').value||null,
+    baths:document.getElementById('b-baths').value||null,
+    sqft:document.getElementById('b-sqft').value||null,
+    status:document.getElementById('b-status').value,
+    coe:document.getElementById('b-coe').value||null,
+    contingencies:JSON.parse(JSON.stringify(tempContingencies)),
+    photo:document.getElementById('b-photo').value.trim()||null,
+  };
+  try {
+    if(editId){
+      const updated = await sbUpdate('buyers', editId, row);
+      buyers=buyers.map(b=>b.id===editId?(mapBuyer(updated||{...row,id:editId})):b);
+      toast('Purchase updated');
+    } else {
+      const created = await sbInsert('buyers', row);
+      const mapped = mapBuyer(created||{...row,id:uid()});
+      buyers.unshift(mapped);
+      toast('Buyer purchase added');
+    }
+    closeModals(); renderDashboard(); renderBuyersGrid();
+  } catch(e) { toast('Save failed — check your connection','error'); console.error(e); }
+}
+
+// ═══════════════════════════ CLIENTS ═══════════════════════════
+function renderClientsGrid() {
+  const tf=document.getElementById('client-filter-type')?.value||'all';
+  let data=tf==='all'?clients:clients.filter(c=>c.type===tf);
+  document.getElementById('clients-count').textContent=clients.length;
+  const grid=document.getElementById('clients-grid');
+  if(!data.length){grid.innerHTML='<div class="empty-state"><div class="empty-state-title">No clients yet</div><div class="empty-state-sub">Add your first client above</div></div>';return;}
+  grid.innerHTML=data.map(cl=>`
+    <div class="client-card fade-up" onclick="openClientDetail('${cl.id}')">
+      <div class="client-avatar-lg">${initials(cl.name)}</div>
+      <div class="client-name-txt">${cl.name}</div>
+      <span class="client-type-badge">${cl.type}</span>
+      ${cl.phone?`<div class="client-contact-row">&#128222; <a href="tel:${cl.phone}">${cl.phone}</a></div>`:''}
+      ${cl.email?`<div class="client-contact-row">&#9993; <a href="mailto:${cl.email}">${cl.email}</a></div>`:''}
+      ${cl.budget?`<div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-top:10px">${cl.budget}</div>`:''}
+      <div style="margin-top:8px">
+        ${cl.preapproval?`<span class="tag">${cl.preapproval}</span>`:''}
+        ${cl.neighborhoods?cl.neighborhoods.split(',').slice(0,2).map(n=>`<span class="tag">${n.trim()}</span>`).join(''):''}
+      </div>
+    </div>`).join('');
+}
+
+function openClientDetail(id) {
+  const cl=clients.find(x=>x.id===id); if(!cl) return;
+  currentClientId=id;
+  document.getElementById('dc-eyebrow').textContent=cl.type+' Client';
+  document.getElementById('dc-name').textContent=cl.name;
+  document.getElementById('dc-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div><div class="kpi-label">Phone</div><div>${cl.phone?`<a href="tel:${cl.phone}" style="color:var(--ink)">${cl.phone}</a>`:'—'}</div></div>
+      <div><div class="kpi-label">Email</div><div>${cl.email?`<a href="mailto:${cl.email}" style="color:var(--ink);font-size:13px">${cl.email}</a>`:'—'}</div></div>
+      <div><div class="kpi-label">Budget</div><div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700">${cl.budget||'—'}</div></div>
+      <div><div class="kpi-label">Pre-Approval</div><div>${cl.preapproval||'—'}</div></div>
+      <div><div class="kpi-label">Preferred Areas</div><div style="font-size:13px">${cl.neighborhoods||'—'}</div></div>
+      <div><div class="kpi-label">Referral Source</div><div style="font-size:13px">${cl.referral||'—'}</div></div>
+      <div><div class="kpi-label">Birthday</div><div style="font-size:13px">${fmtDate(cl.birthday)}</div></div>
+      <div><div class="kpi-label">Anniversary</div><div style="font-size:13px">${fmtDate(cl.anniversary)}</div></div>
+    </div>
+    ${cl.notes?`<div class="kpi-label" style="margin-bottom:8px">Notes</div><div style="font-size:13px;line-height:1.7;color:var(--muted);background:var(--cream);padding:14px">${cl.notes.replace(/\n/g,'<br>')}</div>`:''}
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-outline" onclick="editCurrentClient()" style="flex:1">Edit</button>
+      <button class="btn btn-danger" onclick="deleteCurrentClient()">Remove</button>
+    </div>`;
+  document.getElementById('detail-client-modal').classList.add('open');
+}
+
+let currentClientId=null;
+function openAddClientModal() {
+  document.getElementById('client-modal-eyebrow').textContent='New Client';
+  document.getElementById('client-modal-title').textContent='Add Client';
+  document.getElementById('client-save-btn').textContent='Add Client';
+  document.getElementById('client-edit-id').value='';
+  ['c-name','c-phone','c-email','c-budget','c-neighborhoods','c-referral','c-birthday','c-anniversary','c-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-type').value='Buyer';
+  document.getElementById('c-preapproval').value='';
+  document.getElementById('add-client-modal').classList.add('open');
+}
+
+async function saveClient() {
+  const name=document.getElementById('c-name').value.trim();
+  if(!name){toast('Name is required','error');return;}
+  const editId=document.getElementById('client-edit-id').value;
+  const row={name,phone:document.getElementById('c-phone').value.trim()||null,email:document.getElementById('c-email').value.trim()||null,type:document.getElementById('c-type').value,budget:document.getElementById('c-budget').value.trim()||null,neighborhoods:document.getElementById('c-neighborhoods').value.trim()||null,preapproval:document.getElementById('c-preapproval').value||null,referral:document.getElementById('c-referral').value.trim()||null,birthday:document.getElementById('c-birthday').value||null,anniversary:document.getElementById('c-anniversary').value||null,notes:document.getElementById('c-notes').value.trim()||null};
+  try{
+    if(editId){const u=await sbUpdate('clients',editId,row);clients=clients.map(cl=>cl.id===editId?mapClient({...row,id:editId,...(u||{})}):cl);toast('Client updated');}
+    else{const cr=await sbInsert('clients',row);clients.unshift(mapClient(cr||{...row,id:uid()}));toast('Client added');}
+    closeModals();renderClientsGrid();renderDashboard();updateClientDatalist();
+  }catch(e){toast('Save failed','error');console.error(e);}
+}
+
+function editCurrentClient() {
+  const cl=clients.find(x=>x.id===currentClientId); if(!cl) return;
+  closeModals();
+  document.getElementById('client-modal-eyebrow').textContent='Edit Client';
+  document.getElementById('client-modal-title').textContent='Edit Client';
+  document.getElementById('client-save-btn').textContent='Save Changes';
+  document.getElementById('client-edit-id').value=cl.id;
+  document.getElementById('c-name').value=cl.name;document.getElementById('c-phone').value=cl.phone||'';
+  document.getElementById('c-email').value=cl.email||'';document.getElementById('c-type').value=cl.type;
+  document.getElementById('c-budget').value=cl.budget||'';document.getElementById('c-preapproval').value=cl.preapproval||'';
+  document.getElementById('c-neighborhoods').value=cl.neighborhoods||'';document.getElementById('c-referral').value=cl.referral||'';
+  document.getElementById('c-birthday').value=cl.birthday||'';document.getElementById('c-anniversary').value=cl.anniversary||'';
+  document.getElementById('c-notes').value=cl.notes||'';
+  document.getElementById('add-client-modal').classList.add('open');
+}
+
+async function deleteCurrentClient() {
+  if(!confirm('Remove this client?')) return;
+  try{await sbDelete('clients',currentClientId);clients=clients.filter(x=>x.id!==currentClientId);closeModals();renderClientsGrid();renderDashboard();toast('Client removed');}
+  catch(e){toast('Delete failed','error');}
+}
+
+function mapClient(r){return{id:r.id,name:r.name,phone:r.phone||'',email:r.email||'',type:r.type||'Buyer',budget:r.budget||'',neighborhoods:r.neighborhoods||'',preapproval:r.preapproval||'',referral:r.referral||'',birthday:r.birthday||null,anniversary:r.anniversary||null,notes:r.notes||''};}
+
+function initials(name){return(name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+
+function updateClientDatalist() {
+  const dl=document.getElementById('client-names-list'); if(!dl) return;
+  dl.innerHTML=clients.map(cl=>`<option value="${cl.name}">`).join('');
+}
+
+// ═══════════════════════════ PIPELINE ═══════════════════════════
+function renderPipeline() {
+  const stages=['Prospecting','Offer Stage','Under Contract','Closed'];
+  const map={}; stages.forEach(s=>map[s]=[]);
+  pipelineDeals.forEach(d=>map[d.stage]&&map[d.stage].push(d));
+  const grandTotal=pipelineDeals.reduce((a,d)=>a+d.value,0);
+  const ptEl=document.getElementById('pipeline-total');
+  if(ptEl) ptEl.textContent=grandTotal>=1e6?(grandTotal/1e6).toFixed(1)+'M':fmt(grandTotal)||'$0';
+  const makeCard=s=>{
+    const deals=map[s]; const total=deals.reduce((a,d)=>a+d.value,0);
+    const dealsHTML=deals.length
+      ?deals.map(d=>`<div class="pipeline-deal"><div><div style="font-weight:500">${d.name}</div><div style="color:var(--muted);font-size:11px;margin-top:2px">${d.client}</div></div><div class="pipeline-deal-val">${fmt(d.value)}</div></div>`).join('')
+      :`<div style="padding:16px 0;text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid);letter-spacing:2px">NO DEALS YET</div>`;
+    return `<div class="card fade-up" style="margin-bottom:24px"><div class="card-header"><span class="card-title">${s}</span><span style="font-family:'Playfair Display',serif;font-size:14px;font-weight:600">${total?fmt(total):'—'}</span></div><div style="padding:0 20px 8px">${dealsHTML}</div></div>`;
+  };
+  document.getElementById('pipeline-col-1').innerHTML=makeCard('Prospecting')+makeCard('Under Contract');
+  document.getElementById('pipeline-col-2').innerHTML=makeCard('Offer Stage')+makeCard('Closed');
+}
+
+// ═══════════════════════════ CSV IMPORT ═══════════════════════════
+function setupDragDrop() {
+  const dz=document.getElementById('drop-zone');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];f&&f.name.endsWith('.csv')?handleCSVFile(f):toast('Please drop a .csv file','error')});
+}
+
+function handleCSVFile(file) {
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{const rows=parseCSV(e.target.result);if(!rows.length){toast('CSV empty or invalid','error');return;}pendingCSV=rows;showPreview(rows)};
+  r.readAsText(file);
+}
+
+function parseCSV(text) {
+  const lines=text.trim().split(/\r?\n/); if(lines.length<2) return [];
+  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/["\s]/g,''));
+  return lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const vals=parseCSVLine(line),obj={};
+    headers.forEach((h,i)=>obj[h]=(vals[i]||'').trim().replace(/^"|"$/g,''));
+    return obj;
+  }).filter(r=>r.name&&r.price);
+}
+
+function parseCSVLine(line) {
+  const res=[];let cur='',inQ=false;
+  for(let c of line){if(c==='"'){inQ=!inQ}else if(c===','&&!inQ){res.push(cur);cur=''}else cur+=c}
+  res.push(cur);return res;
+}
+
+function showPreview(rows) {
+  const keys=['name','address','price','type','beds','baths','sqft','list_date','status','photo_url'];
+  document.getElementById('preview-table-wrap').innerHTML=`<table class="prop-table" style="font-size:11px"><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,5).map(r=>`<tr>${keys.map(k=>k==='photo_url'&&r[k]?`<td><img src="${r[k]}" style="width:48px;height:36px;object-fit:cover;vertical-align:middle" onerror="this.outerHTML='⊡'"> <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--green)">✓</span></td>`:`<td>${r[k]||r[k.replace('_','')]||'—'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  document.getElementById('import-row-count').textContent=rows.length+' rows to import';
+  document.getElementById('import-preview').style.display='block';
+}
+
+async function confirmImport() {
+  if(!pendingCSV) return;
+  const rows=pendingCSV.map(r=>({
+    name:r.name||'Unnamed', addr:r.address||r.addr||'',
+    price:parseFloat((r.price||'0').replace(/[^0-9.]/g,''))||0,
+    type:r.type||'Residential', beds:r.beds||null, baths:r.baths||null,
+    sqft:r.sqft?parseInt(r.sqft.replace(/[^0-9]/g,'')):null,
+    list_date:r.list_date||r.listdate||null,
+    status:(r.status||'active').toLowerCase(),
+    photo:r.photo_url||r.photo||null,
+  }));
+  try {
+    // Insert all rows at once
+    const r = await fetch(`${SUPA_URL}/rest/v1/listings`, { method:'POST', headers: hdrs, body: JSON.stringify(rows) });
+    if (!r.ok) throw new Error(await r.text());
+    const created = await r.json();
+    const mapped = (Array.isArray(created)?created:[]).map(mapListing);
+    listings=[...mapped,...listings];
+    pendingCSV=null; document.getElementById('import-preview').style.display='none';
+    document.getElementById('csv-input').value='';
+    toast(`${mapped.length} listings imported`);
+    renderDashboard(); showView('listings');
+  } catch(e) { toast('Import failed — check your connection','error'); console.error(e); }
+}
+
+function cancelImport(){pendingCSV=null;document.getElementById('import-preview').style.display='none'}
+
+function downloadTemplate() {
+  const csv='name,address,price,type,beds,baths,sqft,list_date,status,photo_url\nThe Meridian Penthouse,"482 Vallejo St, San Francisco",4950000,Luxury,5,4,4200,2025-01-15,active,https://your-mls-photo-url.com/photo.jpg';
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='estate_crm_template.csv';a.click();
+}
+
+// ═══════════════════════════ MODALS ═══════════════════════════
+function openReportModal(){document.getElementById('report-modal').classList.add('open')}
+function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'))}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModals()}));
+
+// ═══════════════════════════ REPORT ═══════════════════════════
+function generateReport() {
+  const client=document.getElementById('rep-client').value||'Valued Client';
+  const title=document.getElementById('rep-title').value;
+  const sections=document.getElementById('rep-sections').value;
+  const tf=document.getElementById('rep-type-filter').value;
+  const brokerName=document.getElementById('broker-name')?.textContent||'Your Name';
+  let data=tf==='all'?listings:listings.filter(l=>l.type===tf);
+  const active=data.filter(l=>l.status!=='closed');
+
+  document.getElementById('rep-display-title').textContent=title;
+  document.getElementById('report-byline').textContent=`Prepared for ${client} by ${brokerName} · ${new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'})}`;
+
+  let html='';
+
+  if(sections==='full'||sections==='listings') {
+    html+=`<div class="section-masthead fade-up"><div><span class="section-eyebrow">Seller Portfolio</span><h2 class="section-headline">Active <em>Listings</em></h2></div><div class="section-count">${active.length}</div></div>`;
+    if(active.some(l=>l.photo)){
+      html+=`<div class="report-photo-grid">${active.slice(0,6).map(l=>l.photo?`<img src="${l.photo}" loading="lazy">`:`<div class="no-photo">No Photo</div>`).join('')}</div>`;
+    }
+    html+=`<div class="card fade-up" style="margin-bottom:40px"><table class="prop-table"><thead><tr><th>Property</th><th>Type</th><th>Price</th><th>Beds/Baths</th><th>Sqft</th><th>Listed</th><th>DOM</th><th>Status</th></tr></thead><tbody>
+      ${active.map(l=>{const dom=calcDOM(l.listDate);return`<tr><td><span class="prop-name">${l.name}</span><span class="prop-addr">${l.addr}</span></td><td><span class="tag">${l.type}</span></td><td><span class="price-val">${fmt(l.price)}</span></td><td>${l.beds?l.beds+' / '+l.baths:'—'}</td><td>${l.sqft?Number(l.sqft).toLocaleString():'—'}</td><td style="font-family:'DM Mono',monospace;font-size:11px">${fmtDate(l.listDate)}</td><td>${dom!==null?dom+'d':'—'}</td><td><span class="status-pill ${l.status}">${l.status}</span></td></tr>`}).join('')}
+    </tbody></table></div>`;
+  }
+
+  if(sections==='full'||sections==='buyers') {
+    html+=`<div class="magazine-rule"><span class="magazine-rule-text">Buyer Purchases</span></div>`;
+    html+=`<div class="section-masthead fade-up" style="margin-top:0"><div><span class="section-eyebrow">Buyer Side</span><h2 class="section-headline">Active <em>Purchases</em></h2></div><div class="section-count">${buyers.length}</div></div>`;
+    if(buyers.some(b=>b.photo)){
+      html+=`<div class="report-photo-grid">${buyers.slice(0,6).map(b=>b.photo?`<img src="${b.photo}" loading="lazy">`:`<div class="no-photo">No Photo</div>`).join('')}</div>`;
+    }
+    if(buyers.length){
+      html+=`<div class="card fade-up" style="margin-bottom:40px"><table class="prop-table"><thead><tr><th>Property</th><th>Purchase Price</th><th>Beds/Baths</th><th>Status</th><th>Close of Escrow</th><th>Contingencies</th></tr></thead><tbody>
+        ${buyers.map(b=>`<tr><td><span class="prop-name">${b.name}</span><span class="prop-addr">${b.addr}</span></td><td><span class="price-val">${fmt(b.price)}</span></td><td>${b.beds?b.beds+' / '+b.baths:'—'}</td><td><span class="status-pill ${b.status}">${b.status}</span></td><td style="font-family:'DM Mono',monospace;font-size:11px">${fmtDate(b.coe)}</td><td>${(b.contingencies||[]).map(c=>`<span class="contingency-chip">${c.name}<span class="days">${c.days}d</span></span>`).join('')||'—'}</td></tr>`).join('')}
+      </tbody></table></div>`;
+    } else {
+      html+=`<p style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;text-align:center;padding:24px">No buyer purchases recorded.</p>`;
+    }
+  }
+
+  document.getElementById('report-content').innerHTML=html;
+  closeModals(); showView('report');
+}
+
+
+// ═══════════════════════════ CMA REPORTS ═══════════════════════════
+let tempComps=[], currentCMAId=null;
+
+function renderCMAList() {
+  document.getElementById('cma-count').textContent=cmaReports.length;
+  const list=document.getElementById('cma-list');
+  if(!cmaReports.length){list.innerHTML='<div class="empty-state" style="border:1px solid var(--border);background:var(--white)"><div class="empty-state-title">No CMA reports yet</div><div class="empty-state-sub">Create your first CMA above</div></div>';return;}
+  list.innerHTML=cmaReports.map(r=>`
+    <div class="cma-report-card fade-up" onclick="openCMADetail('${r.id}')">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700">${r.subjectAddr}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:4px">${r.type||''} &bull; ${(r.comps||[]).length} comparables &bull; ${fmtDate(r.createdAt?.split('T')[0])}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--accent)">${r.suggestedLow&&r.suggestedHigh?fmt(r.suggestedLow)+' – '+fmt(r.suggestedHigh):'Pending'}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px">${r.beds?r.beds+' bed / '+r.baths+' bath':''} ${r.sqft?'| '+Number(r.sqft).toLocaleString()+' sqft':''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function openCMADetail(id) {
+  const r=cmaReports.find(x=>x.id===id); if(!r) return;
+  currentCMAId=id;
+  // Open in edit mode pre-filled
+  openNewCMAModal();
+  document.getElementById('cma-modal-eyebrow').textContent='View / Edit CMA';
+  document.getElementById('cma-modal-title').textContent=r.subjectAddr;
+  document.getElementById('cma-save-btn').textContent='Update Report';
+  document.getElementById('cma-edit-id').value=r.id;
+  document.getElementById('cma-addr').value=r.subjectAddr;
+  document.getElementById('cma-type').value=r.type||'Residential';
+  document.getElementById('cma-beds').value=r.beds||'';
+  document.getElementById('cma-baths').value=r.baths||'';
+  document.getElementById('cma-sqft').value=r.sqft||'';
+  document.getElementById('cma-notes').value=r.notes||'';
+  tempComps=JSON.parse(JSON.stringify(r.comps||[]));
+  renderCompRows();recalcCMA();
+}
+
+function openNewCMAModal() {
+  tempComps=[];
+  document.getElementById('cma-modal-eyebrow').textContent='New CMA';
+  document.getElementById('cma-modal-title').textContent='Competitive Market Analysis';
+  document.getElementById('cma-save-btn').textContent='Save CMA Report';
+  document.getElementById('cma-edit-id').value='';
+  ['cma-addr','cma-beds','cma-baths','cma-sqft','cma-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cma-type').value='Residential';
+  document.getElementById('comp-rows').innerHTML='';
+  document.getElementById('cma-result-preview').style.display='none';
+  // Add 3 blank rows to start
+  for(let i=0;i<3;i++) addCompRow();
+  document.getElementById('cma-modal').classList.add('open');
+}
+
+function addCompRow(comp={}) {
+  const idx=document.getElementById('comp-rows').children.length;
+  const row=document.createElement('div');
+  row.className='comp-input-row';
+  row.dataset.idx=idx;
+  row.innerHTML=`
+    <input class="comp-input" placeholder="123 Main St, City" value="${comp.addr||''}" oninput="updateComp(${idx},'addr',this.value)">
+    <input class="comp-input" type="number" placeholder="1250000" value="${comp.price||''}" oninput="updateComp(${idx},'price',this.value);recalcCMA()">
+    <input class="comp-input" type="number" placeholder="2100" value="${comp.sqft||''}" oninput="updateComp(${idx},'sqft',this.value);recalcCMA()">
+    <input class="comp-input" type="number" placeholder="3" value="${comp.beds||''}" oninput="updateComp(${idx},'beds',this.value)">
+    <input class="comp-input" type="number" placeholder="2" value="${comp.baths||''}" oninput="updateComp(${idx},'baths',this.value)">
+    <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:var(--green);text-align:center;padding:10px 4px" id="ppsf-${idx}">—</div>
+    <button onclick="removeCompRow(this)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0;line-height:1">×</button>`;
+  document.getElementById('comp-rows').appendChild(row);
+  if(!tempComps[idx]) tempComps.push(comp);
+  else tempComps[idx]=comp;
+  recalcCMA();
+}
+
+function renderCompRows() {
+  document.getElementById('comp-rows').innerHTML='';
+  tempComps.forEach(comp=>addCompRow(comp));
+}
+
+function updateComp(idx,field,val) {
+  if(!tempComps[idx]) tempComps[idx]={};
+  tempComps[idx][field]=val;
+  if(field==='price'||field==='sqft') {
+    const p=parseFloat(tempComps[idx].price); const s=parseFloat(tempComps[idx].sqft);
+    const el=document.getElementById('ppsf-'+idx);
+    if(el) el.textContent=(p&&s)?'$'+Math.round(p/s).toLocaleString():'—';
+  }
+}
+
+function removeCompRow(btn) {
+  const row=btn.closest('.comp-input-row');
+  const idx=parseInt(row.dataset.idx);
+  tempComps.splice(idx,1);
+  renderCompRows();recalcCMA();
+}
+
+function recalcCMA() {
+  const subSqft=parseFloat(document.getElementById('cma-sqft').value);
+  const valid=tempComps.filter(c=>c.price&&c.sqft&&parseFloat(c.price)>0&&parseFloat(c.sqft)>0);
+  const preview=document.getElementById('cma-result-preview');
+  if(!valid.length||!subSqft){preview.style.display='none';return;}
+  const ppsfVals=valid.map(c=>parseFloat(c.price)/parseFloat(c.sqft));
+  const avgPpsf=ppsfVals.reduce((a,b)=>a+b,0)/ppsfVals.length;
+  const low=Math.round(avgPpsf*subSqft*0.95/1000)*1000;
+  const high=Math.round(avgPpsf*subSqft*1.05/1000)*1000;
+  document.getElementById('cma-range-display').textContent=fmt(low)+' – '+fmt(high);
+  document.getElementById('cma-range-sub').textContent='Based on '+valid.length+' comparable'+(valid.length>1?'s':'');
+  document.getElementById('cma-ppsf-display').textContent='$'+Math.round(avgPpsf).toLocaleString();
+  preview.style.display='flex';
+}
+
+async function saveCMA() {
+  const addr=document.getElementById('cma-addr').value.trim();
+  if(!addr){toast('Subject address is required','error');return;}
+  const subSqft=parseFloat(document.getElementById('cma-sqft').value)||null;
+  const valid=tempComps.filter(c=>c.price&&c.sqft&&parseFloat(c.price)>0);
+  let low=null,high=null;
+  if(valid.length&&subSqft){
+    const avg=valid.reduce((a,c)=>a+parseFloat(c.price)/parseFloat(c.sqft),0)/valid.length;
+    low=Math.round(avg*subSqft*0.95/1000)*1000;
+    high=Math.round(avg*subSqft*1.05/1000)*1000;
+  }
+  const editId=document.getElementById('cma-edit-id').value;
+  const row={subject_address:addr,subject_beds:document.getElementById('cma-beds').value||null,subject_baths:document.getElementById('cma-baths').value||null,subject_sqft:subSqft,subject_type:document.getElementById('cma-type').value,comps:tempComps.filter(c=>c.addr||c.price),suggested_low:low,suggested_high:high,notes:document.getElementById('cma-notes').value.trim()||null};
+  try{
+    if(editId){const u=await sbUpdate('cma_reports',editId,row);cmaReports=cmaReports.map(r=>r.id===editId?mapCMA({...row,id:editId,created_at:r.createdAt,...(u||{})}):r);toast('CMA updated');}
+    else{const cr=await sbInsert('cma_reports',row);cmaReports.unshift(mapCMA(cr||{...row,id:uid(),created_at:new Date().toISOString()}));toast('CMA saved');}
+    closeModals();renderCMAList();
+  }catch(e){toast('Save failed','error');console.error(e);}
+}
+
+function mapCMA(r){return{id:r.id,subjectAddr:r.subject_address,beds:r.subject_beds,baths:r.subject_baths,sqft:r.subject_sqft,type:r.subject_type,comps:r.comps||[],suggestedLow:r.suggested_low,suggestedHigh:r.suggested_high,notes:r.notes||'',createdAt:r.created_at};}
+
+// ═══════════════════════════ ONBOARDING ═══════════════════════════
+async function checkOnboarding() {
+  try {
+    const r=await loadBroker(SK.broker, null);
+    if(r){const d=r;applyBrokerInfo(d.name,d.title);}
+    else{document.getElementById('onboard-modal').classList.add('open');}
+  } catch {document.getElementById('onboard-modal').classList.add('open');}
+}
+
+function applyBrokerInfo(name,title) {
+  const n=document.getElementById('broker-name');
+  const t=document.getElementById('broker-title');
+  const a=document.getElementById('broker-avatar');
+  if(n) n.textContent=name||'Your Name';
+  if(t) t.textContent=title||'Your Title';
+  if(a) a.textContent=(name||'YN').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+async function saveOnboarding() {
+  const name=document.getElementById('onboard-name').value.trim()||'Your Name';
+  const title=document.getElementById('onboard-title').value.trim()||'Your Title';
+  try{await persistBroker(SK.broker,{name,title});}catch(e){}
+  applyBrokerInfo(name,title); closeModals(); toast('Welcome, '+name+' — your CRM is ready');
+}
+
+// ═══════════════════════════ DATA MAPPERS ═══════════════════════════
+// Map Supabase snake_case rows to camelCase used in the app
+function mapListing(r) {
+  return {
+    id: r.id, name: r.name, addr: r.addr||'', price: r.price||0,
+    type: r.type||'Residential', beds: r.beds, baths: r.baths, sqft: r.sqft,
+    listDate: r.list_date||null, status: r.status||'active', photo: r.photo||null,
+  };
+}
+function mapBuyer(r) {
+  return {
+    id: r.id, name: r.name, addr: r.addr||'', price: r.price||0,
+    type: r.type||'Residential', beds: r.beds, baths: r.baths, sqft: r.sqft,
+    status: r.status||'pending', coe: r.coe||null,
+    contingencies: r.contingencies||[], photo: r.photo||null,
+  };
+}
+
+// ═══════════════════════════ INIT ═══════════════════════════
+async function init() {
+  document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  showLoadingState(true);
+  try {
+    const [rawL,rawB,rawC,rawP,rawCMA] = await Promise.all([
+      sbFetch('listings'),sbFetch('buyers'),sbFetch('clients'),sbFetch('pipeline'),sbFetch('cma_reports')
+    ]);
+    listings=rawL.map(mapListing);
+    buyers=rawB.map(mapBuyer);
+    clients=rawC.map(mapClient);
+    pipelineDeals=rawP.map(mapDeal);
+    cmaReports=rawCMA.map(mapCMA);
+  } catch(e) {
+    console.error('Failed to load data from Supabase', e);
+    toast('Could not connect to database — check your connection','error');
+  }
+  showLoadingState(false);
+  await checkOnboarding();
+  renderDashboard();
+  updateClientDatalist();
+  setupDragDrop();
+}
+
+function showLoadingState(loading) {
+  document.getElementById('topbar-title').textContent = loading ? 'Loading your data…' : META['dashboard'][1];
+}
+
+init();
+</script>
+</body>
+</html>
