@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMA Pro — Comparative Market Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --gold: #c9a84c;
+    --gold-light: #e8d5a3;
+    --cream: #f8f5ef;
+    --white: #ffffff;
+    --slate: #4a5568;
+    --muted: #8a8fa0;
+    --border: #e2ddd6;
+    --success: #2d6a4f;
+    --danger: #c0392b;
+    --shadow: 0 4px 24px rgba(26,26,46,0.08);
+    --shadow-lg: 0 12px 48px rgba(26,26,46,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    background: var(--ink);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .nav-brand span { color: var(--white); font-weight: 400; }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-tab {
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+  .nav-tab:hover { color: var(--white); background: rgba(255,255,255,0.06); }
+  .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.12); }
+
+  /* ---- LAYOUT ---- */
+  .app { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+  .page { display: none; animation: fadeUp 0.3s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- HEADINGS ---- */
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .page-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 36px;
+  }
+
+  /* ---- CARD ---- */
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--ink);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* ---- FORM ---- */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1/-1; }
+  label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  input, select, textarea {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--cream);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+    background: var(--white);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* ---- BUTTONS ---- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 24px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--white);
+  }
+  .btn-primary:hover { background: #2d2d4e; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,26,46,0.2); }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .btn-gold:hover { background: #b8952f; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,168,76,0.3); }
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--slate);
+  }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-sm { padding: 7px 16px; font-size: 0.8rem; }
+  .btn-danger { background: #fff0ee; color: var(--danger); border: 1.5px solid #f5c6c2; }
+  .btn-danger:hover { background: #fde0dc; }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    align-items: center;
+  }
+
+  /* ---- SAVE TOAST ---- */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--success);
+    color: var(--white);
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ---- UPLOAD ZONE ---- */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--cream);
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.04);
+  }
+  .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .upload-label { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 6px; }
+  .upload-hint { font-size: 0.82rem; color: var(--muted); }
+  #file-input { display: none; }
+
+  /* ---- COMPS TABLE ---- */
+  .comps-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .comps-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom: 2px solid var(--border);
+    background: var(--cream);
+  }
+  .comps-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink);
+    vertical-align: middle;
+  }
+  .comps-table tr:last-child td { border-bottom: none; }
+  .comps-table tr:hover td { background: rgba(201,168,76,0.03); }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .badge-sold { background: #e8f5e9; color: #2e7d32; }
+  .badge-active { background: #e3f2fd; color: #1565c0; }
+  .badge-pending { background: #fff3e0; color: #e65100; }
+
+  /* ---- CMA REPORT ---- */
+  .report-wrapper { display: none; }
+  .report-wrapper.visible { display: block; }
+
+  .report-header {
+    background: var(--ink);
+    border-radius: 12px 12px 0 0;
+    padding: 40px 48px;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+  }
+  .report-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(201,168,76,0.08);
+  }
+  .report-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 40%;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(201,168,76,0.05);
+  }
+  .report-eyebrow {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .report-address {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    position: relative; z-index: 1;
+  }
+  .report-meta { color: rgba(255,255,255,0.6); font-size: 0.875rem; position: relative; z-index: 1; }
+  .report-agent {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    position: relative; z-index: 1;
+  }
+  .agent-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .agent-name { font-weight: 500; font-size: 0.95rem; }
+  .agent-title { color: var(--gold-light); font-size: 0.8rem; }
+
+  .report-body {
+    background: var(--white);
+    border-radius: 0 0 12px 12px;
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 40px 48px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 36px;
+  }
+  .stat-cell {
+    background: var(--white);
+    padding: 22px 20px;
+    text-align: center;
+  }
+  .stat-cell:first-child { border-radius: 10px 0 0 10px; }
+  .stat-cell:last-child { border-radius: 0 10px 10px 0; }
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .section-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .value-range {
+    background: linear-gradient(135deg, var(--ink) 0%, #2d2d4e 100%);
+    border-radius: 10px;
+    padding: 28px 32px;
+    color: var(--white);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .range-label { font-size: 0.8rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .range-value { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--gold); }
+  .range-divider { width: 1px; background: rgba(255,255,255,0.15); align-self: stretch; }
+  .range-recommended .range-value { font-size: 2rem; color: var(--white); }
+  .range-recommended .range-label { color: var(--gold-light); }
+
+  .report-actions {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 700px) {
+    .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    nav { padding: 0 16px; }
+    .app { padding: 24px 16px; }
+    .report-header, .report-body { padding: 28px 24px; }
+    .report-address { font-size: 1.3rem; }
+    .value-range { flex-direction: column; }
+    .range-divider { display: none; }
+  }
+
+  /* ---- COMPS ROWS ---- */
+  .comp-row-inputs {
+    display: grid;
+    grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 0.8fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-row-inputs:last-of-type { border-bottom: none; }
+  .comp-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 0.8fr auto;
+    gap: 8px;
+    padding: 0 0 8px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .col-head {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+    font-size: 1rem;
+  }
+  .icon-btn:hover { color: var(--danger); }
+
+  /* info banner */
+  .info-banner {
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: var(--slate);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">CMA<span> Pro</span></div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showPage('profile')">Profile</div>
+    <div class="nav-tab" onclick="showPage('subject')">Subject Property</div>
+    <div class="nav-tab" onclick="showPage('comps')">Comparables</div>
+    <div class="nav-tab" onclick="showPage('report')">Report</div>
+  </div>
+</nav>
+
+<div class="app">
+
+  <!-- ===== PROFILE PAGE ===== -->
+  <div class="page active" id="page-profile">
+    <div class="page-title">Your Profile</div>
+    <div class="page-subtitle">Your name and title will appear on every CMA report you generate.</div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Agent Information</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="agent-first" placeholder="Jane">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="agent-last" placeholder="Doe">
+        </div>
+        <div class="form-group">
+          <label>Professional Title</label>
+          <input type="text" id="agent-title" placeholder="REALTOR® | Luxury Property Specialist">
+        </div>
+        <div class="form-group">
+          <label>Brokerage</label>
+          <input type="text" id="agent-brokerage" placeholder="Premier Properties Group">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="agent-phone" placeholder="(555) 000-0000">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="agent-email" placeholder="jane@brokerage.com">
+        </div>
+        <div class="form-group">
+          <label>License Number</label>
+          <input type="text" id="agent-license" placeholder="CA-DRE 012345678">
+        </div>
+        <div class="form-group">
+          <label>Website</label>
+          <input type="text" id="agent-website" placeholder="www.janedoe.com">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="saveProfile()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Profile
+        </button>
+        <button class="btn btn-outline" onclick="clearProfile()">Clear</button>
+        <span id="profile-saved-label" style="font-size:0.82rem;color:var(--success);display:none;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Profile saved
+        </span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Profile Preview</div>
+      <div style="background:var(--ink);border-radius:10px;padding:24px 28px;display:flex;align-items:center;gap:16px;">
+        <div class="agent-avatar" id="preview-avatar">?</div>
+        <div>
+          <div class="agent-name" id="preview-name" style="color:white;font-size:1.05rem;">Your Name</div>
+          <div class="agent-title" id="preview-title" style="color:var(--gold-light);font-size:0.82rem;">Your Title</div>
+          <div id="preview-brokerage" style="color:rgba(255,255,255,0.45);font-size:0.78rem;margin-top:2px;">Brokerage</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SUBJECT PROPERTY PAGE ===== -->
+  <div class="page" id="page-subject">
+    <div class="page-title">Subject Property</div>
+    <div class="page-subtitle">Enter the details of the property you are evaluating.</div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Property Details</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Street Address</label>
+          <input type="text" id="s-address" placeholder="123 Maple Avenue">
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" id="s-city" placeholder="Beverly Hills">
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" id="s-state" placeholder="CA">
+        </div>
+        <div class="form-group">
+          <label>ZIP Code</label>
+          <input type="text" id="s-zip" placeholder="90210">
+        </div>
+        <div class="form-group">
+          <label>Property Type</label>
+          <select id="s-type">
+            <option>Single Family</option>
+            <option>Condo / Townhome</option>
+            <option>Multi-Family</option>
+            <option>Land</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <input type="number" id="s-beds" placeholder="4">
+        </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <input type="number" id="s-baths" placeholder="3" step="0.5">
+        </div>
+        <div class="form-group">
+          <label>Sq Ft (Living)</label>
+          <input type="number" id="s-sqft" placeholder="2400">
+        </div>
+        <div class="form-group">
+          <label>Lot Size (Sq Ft)</label>
+          <input type="number" id="s-lot" placeholder="6000">
+        </div>
+        <div class="form-group">
+          <label>Year Built</label>
+          <input type="number" id="s-year" placeholder="1985">
+        </div>
+        <div class="form-group">
+          <label>Garage</label>
+          <select id="s-garage">
+            <option>None</option>
+            <option>1-Car</option>
+            <option>2-Car</option>
+            <option>3+ Car</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Notes / Special Features</label>
+          <textarea id="s-notes" placeholder="Pool, remodeled kitchen, hardwood floors throughout..."></textarea>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="saveSubject()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Property
+        </button>
+        <button class="btn btn-outline" onclick="showPage('comps')">Next: Add Comps →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COMPS PAGE ===== -->
+  <div class="page" id="page-comps">
+    <div class="page-title">Comparable Sales</div>
+    <div class="page-subtitle">Add sold, active, or pending comparables manually — or upload a spreadsheet.</div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Upload Spreadsheet</div>
+      <div class="info-banner">
+        📋 Accepted formats: CSV or Excel (.xlsx). Columns should include: <strong>Address, Sale Price, Sq Ft, Beds, Baths, Status, Date, DOM</strong> (in any order).
+      </div>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)">
+        <div class="upload-icon">📊</div>
+        <div class="upload-label">Drop your spreadsheet here</div>
+        <div class="upload-hint">or click to browse — CSV or XLSX</div>
+      </div>
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event)">
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="dot"></span>Manual Entry
+        <button class="btn btn-sm btn-outline" style="margin-left:auto;" onclick="addComp()">+ Add Row</button>
+      </div>
+      <div class="comp-header">
+        <div class="col-head">Address</div>
+        <div class="col-head">Sale Price</div>
+        <div class="col-head">Sq Ft</div>
+        <div class="col-head">Beds/Ba</div>
+        <div class="col-head">DOM</div>
+        <div class="col-head">Status</div>
+        <div class="col-head"></div>
+      </div>
+      <div id="comps-list"></div>
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="saveComps()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Comps
+        </button>
+        <button class="btn btn-outline" onclick="showPage('report')">Generate Report →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REPORT PAGE ===== -->
+  <div class="page" id="page-report">
+    <div class="page-title">CMA Report</div>
+    <div class="page-subtitle">Your professional Comparative Market Analysis, ready to share.</div>
+
+    <div class="card" id="no-report-card">
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:3rem;margin-bottom:16px;">📋</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:8px;">No Report Generated Yet</div>
+        <div style="color:var(--muted);font-size:0.875rem;margin-bottom:24px;">Fill in your subject property and at least one comparable to generate your report.</div>
+        <button class="btn btn-primary" onclick="showPage('subject')">← Start with Subject Property</button>
+      </div>
+    </div>
+
+    <div class="report-wrapper" id="report-output">
+      <div class="report-header">
+        <div class="report-eyebrow">Comparative Market Analysis</div>
+        <div class="report-address" id="r-address">123 Maple Avenue</div>
+        <div class="report-meta" id="r-meta">Beverly Hills, CA 90210 &nbsp;·&nbsp; Single Family &nbsp;·&nbsp; <span id="r-date"></span></div>
+        <div class="report-agent">
+          <div class="agent-avatar" id="r-avatar">J</div>
+          <div>
+            <div class="agent-name" id="r-agent-name">Agent Name</div>
+            <div class="agent-title" id="r-agent-title">Title</div>
+          </div>
+        </div>
+      </div>
+      <div class="report-body">
+        <div class="stats-grid">
+          <div class="stat-cell">
+            <div class="stat-value" id="r-avg-price">—</div>
+            <div class="stat-label">Avg Sale Price</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value" id="r-avg-ppsf">—</div>
+            <div class="stat-label">Avg $/Sq Ft</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value" id="r-avg-dom">—</div>
+            <div class="stat-label">Avg Days on Market</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value" id="r-comp-count">—</div>
+            <div class="stat-label">Comparables</div>
+          </div>
+        </div>
+
+        <div class="section-heading">Suggested List Price Range</div>
+        <div class="value-range">
+          <div>
+            <div class="range-label">Low Estimate</div>
+            <div class="range-value" id="r-low">—</div>
+          </div>
+          <div class="range-divider"></div>
+          <div class="range-recommended">
+            <div class="range-label" style="color:var(--gold-light);">⭐ Recommended Price</div>
+            <div class="range-value" id="r-rec">—</div>
+          </div>
+          <div class="range-divider"></div>
+          <div>
+            <div class="range-label">High Estimate</div>
+            <div class="range-value" id="r-high">—</div>
+          </div>
+        </div>
+
+        <div class="section-heading">Subject Property</div>
+        <table class="comps-table" style="margin-bottom:32px;">
+          <thead>
+            <tr>
+              <th>Address</th><th>Type</th><th>Beds</th><th>Baths</th><th>Sq Ft</th><th>Lot</th><th>Year Built</th>
+            </tr>
+          </thead>
+          <tbody id="r-subject-row"></tbody>
+        </table>
+
+        <div class="section-heading">Comparable Properties</div>
+        <table class="comps-table" style="margin-bottom:8px;">
+          <thead>
+            <tr>
+              <th>Address</th><th>Sale Price</th><th>$/Sq Ft</th><th>Sq Ft</th><th>Beds/Ba</th><th>DOM</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="r-comps-body"></tbody>
+        </table>
+
+        <div class="report-actions">
+          <button class="btn btn-primary" onclick="window.print()">
+            🖨 Print / Save PDF
+          </button>
+          <button class="btn btn-outline" onclick="regenerateReport()">↺ Refresh Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ <span id="toast-msg">Saved successfully</span></div>
+
+<script>
+// ---- STATE ----
+let profileData = JSON.parse(localStorage.getItem('cma_profile') || '{}');
+let subjectData = JSON.parse(localStorage.getItem('cma_subject') || '{}');
+let compsData = JSON.parse(localStorage.getItem('cma_comps') || '[]');
+
+// ---- NAV ----
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tabs = ['profile','subject','comps','report'];
+  document.querySelectorAll('.nav-tab')[tabs.indexOf(name)].classList.add('active');
+  if (name === 'report') buildReport();
+}
+
+// ---- TOAST ----
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ---- PROFILE ----
+function loadProfile() {
+  if (!profileData) return;
+  const f = (id, key) => { const el = document.getElementById(id); if(el && profileData[key]) el.value = profileData[key]; };
+  f('agent-first','first'); f('agent-last','last'); f('agent-title','title');
+  f('agent-brokerage','brokerage'); f('agent-phone','phone'); f('agent-email','email');
+  f('agent-license','license'); f('agent-website','website');
+  updatePreview();
+}
+function saveProfile() {
+  profileData = {
+    first: v('agent-first'), last: v('agent-last'), title: v('agent-title'),
+    brokerage: v('agent-brokerage'), phone: v('agent-phone'), email: v('agent-email'),
+    license: v('agent-license'), website: v('agent-website')
+  };
+  localStorage.setItem('cma_profile', JSON.stringify(profileData));
+  updatePreview();
+  showToast('Profile saved!');
+  const lbl = document.getElementById('profile-saved-label');
+  lbl.style.display = 'flex';
+  setTimeout(() => lbl.style.display = 'none', 3000);
+}
+function clearProfile() {
+  ['agent-first','agent-last','agent-title','agent-brokerage','agent-phone','agent-email','agent-license','agent-website'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  updatePreview();
+}
+function updatePreview() {
+  const first = v('agent-first'), last = v('agent-last');
+  const name = [first, last].filter(Boolean).join(' ') || 'Your Name';
+  const initials = [(first||'')[0], (last||'')[0]].filter(Boolean).join('').toUpperCase() || '?';
+  document.getElementById('preview-avatar').textContent = initials;
+  document.getElementById('preview-name').textContent = name;
+  document.getElementById('preview-title').textContent = v('agent-title') || 'Your Title';
+  document.getElementById('preview-brokerage').textContent = v('agent-brokerage') || 'Brokerage';
+}
+['agent-first','agent-last','agent-title','agent-brokerage'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', updatePreview);
+});
+
+// ---- SUBJECT ----
+function saveSubject() {
+  subjectData = {
+    address: v('s-address'), city: v('s-city'), state: v('s-state'), zip: v('s-zip'),
+    type: v('s-type'), beds: v('s-beds'), baths: v('s-baths'), sqft: v('s-sqft'),
+    lot: v('s-lot'), year: v('s-year'), garage: v('s-garage'), notes: v('s-notes')
+  };
+  localStorage.setItem('cma_subject', JSON.stringify(subjectData));
+  showToast('Subject property saved!');
+}
+function loadSubject() {
+  if (!subjectData) return;
+  const m = {'s-address':'address','s-city':'city','s-state':'state','s-zip':'zip','s-type':'type',
+    's-beds':'beds','s-baths':'baths','s-sqft':'sqft','s-lot':'lot','s-year':'year','s-garage':'garage','s-notes':'notes'};
+  for(const [id, key] of Object.entries(m)) {
+    const el = document.getElementById(id); if(el && subjectData[key]) el.value = subjectData[key];
+  }
+}
+
+// ---- COMPS ----
+let compRows = [];
+function addComp(data) {
+  const id = Date.now() + Math.random();
+  compRows.push(id);
+  const d = data || {};
+  const row = document.createElement('div');
+  row.className = 'comp-row-inputs';
+  row.dataset.id = id;
+  row.innerHTML = `
+    <input type="text" placeholder="456 Oak St" value="${d.address||''}">
+    <input type="number" placeholder="850000" value="${d.price||''}">
+    <input type="number" placeholder="1800" value="${d.sqft||''}">
+    <input type="text" placeholder="3/2" value="${d.bedbath||''}">
+    <input type="number" placeholder="14" value="${d.dom||''}">
+    <select>
+      <option ${(d.status||'Sold')==='Sold'?'selected':''}>Sold</option>
+      <option ${d.status==='Active'?'selected':''}>Active</option>
+      <option ${d.status==='Pending'?'selected':''}>Pending</option>
+    </select>
+    <button class="icon-btn" onclick="removeComp(this, '${id}')">✕</button>
+  `;
+  document.getElementById('comps-list').appendChild(row);
+}
+function removeComp(btn, id) {
+  btn.closest('.comp-row-inputs').remove();
+  compRows = compRows.filter(r => r !== id);
+}
+function saveComps() {
+  const rows = document.querySelectorAll('.comp-row-inputs');
+  compsData = Array.from(rows).map(row => {
+    const inputs = row.querySelectorAll('input, select');
+    return { address: inputs[0].value, price: inputs[1].value, sqft: inputs[2].value,
+             bedbath: inputs[3].value, dom: inputs[4].value, status: inputs[5].value };
+  }).filter(r => r.address || r.price);
+  localStorage.setItem('cma_comps', JSON.stringify(compsData));
+  showToast('Comparables saved!');
+}
+function loadComps() {
+  compsData.forEach(c => addComp(c));
+}
+
+// ---- FILE UPLOAD ----
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) parseFile(file);
+}
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (file) parseFile(file);
+}
+function parseFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) { showToast('File appears empty'); return; }
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z ]/g,''));
+    const find = (terms) => { for(const t of terms) { const i = headers.findIndex(h => h.includes(t)); if(i>=0) return i; } return -1; };
+    const iAddr = find(['address','street','addr']);
+    const iPrice = find(['price','sold','sale','amount']);
+    const iSqft = find(['sqft','sq ft','living','area','size']);
+    const iBeds = find(['bed']);
+    const iBaths = find(['bath']);
+    const iDom = find(['dom','days']);
+    const iStatus = find(['status','type']);
+    let added = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g,''));
+      if (!cols.length || !cols[0]) continue;
+      const bedVal = iBeds >= 0 ? cols[iBeds] : '';
+      const bathVal = iBaths >= 0 ? cols[iBaths] : '';
+      const bedbath = (bedVal && bathVal) ? `${bedVal}/${bathVal}` : (bedVal || bathVal || '');
+      addComp({
+        address: iAddr >= 0 ? cols[iAddr] : cols[0],
+        price: iPrice >= 0 ? cols[iPrice].replace(/[$,]/g,'') : '',
+        sqft: iSqft >= 0 ? cols[iSqft].replace(/,/g,'') : '',
+        bedbath,
+        dom: iDom >= 0 ? cols[iDom] : '',
+        status: iStatus >= 0 ? cols[iStatus] : 'Sold'
+      });
+      added++;
+    }
+    showToast(`Imported ${added} comparable${added !== 1 ? 's' : ''} from spreadsheet!`);
+    document.getElementById('upload-zone').innerHTML = `<div class="upload-icon">✅</div><div class="upload-label">${file.name}</div><div class="upload-hint">${added} rows imported — scroll down to review</div>`;
+  };
+  reader.readAsText(file);
+}
+
+// ---- REPORT ----
+function buildReport() {
+  const hasSubject = subjectData && subjectData.address;
+  const hasComps = compsData && compsData.length > 0;
+
+  document.getElementById('no-report-card').style.display = (hasSubject || hasComps) ? 'none' : 'block';
+  const rout = document.getElementById('report-output');
+  if (!hasSubject && !hasComps) { rout.classList.remove('visible'); return; }
+  rout.classList.add('visible');
+
+  // Header
+  const addr = [subjectData.address, subjectData.city, subjectData.state, subjectData.zip].filter(Boolean).join(', ');
+  document.getElementById('r-address').textContent = subjectData.address || '—';
+  document.getElementById('r-meta').innerHTML = `${subjectData.city || ''}${subjectData.state ? ', '+subjectData.state : ''}${subjectData.zip ? ' '+subjectData.zip : ''} &nbsp;·&nbsp; ${subjectData.type || 'Residential'} &nbsp;·&nbsp; ${new Date().toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'})}`;
+
+  // Agent
+  const p = profileData || {};
+  const name = [p.first, p.last].filter(Boolean).join(' ') || 'Your Name';
+  const initials = [(p.first||'')[0], (p.last||'')[0]].filter(Boolean).join('').toUpperCase() || '?';
+  document.getElementById('r-avatar').textContent = initials;
+  document.getElementById('r-agent-name').textContent = name;
+  document.getElementById('r-agent-title').textContent = [p.title, p.brokerage].filter(Boolean).join(' · ') || 'REALTOR®';
+
+  // Subject row
+  const sRow = document.getElementById('r-subject-row');
+  sRow.innerHTML = `<tr>
+    <td>${subjectData.address||'—'}</td>
+    <td>${subjectData.type||'—'}</td>
+    <td>${subjectData.beds||'—'}</td>
+    <td>${subjectData.baths||'—'}</td>
+    <td>${subjectData.sqft ? Number(subjectData.sqft).toLocaleString() : '—'}</td>
+    <td>${subjectData.lot ? Number(subjectData.lot).toLocaleString() : '—'}</td>
+    <td>${subjectData.year||'—'}</td>
+  </tr>`;
+
+  // Comps
+  const soldComps = compsData.filter(c => c.price && !isNaN(parseFloat(c.price.replace(/,/g,''))));
+  const prices = soldComps.map(c => parseFloat(String(c.price).replace(/[$,]/g,'')));
+  const sqfts = soldComps.map(c => parseFloat(String(c.sqft).replace(/,/g,'')));
+  const doms = compsData.filter(c => c.dom).map(c => parseFloat(c.dom));
+
+  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  const avgPrice = avg(prices);
+  const avgDom = avg(doms);
+  const ppsfs = soldComps.map((c,i) => sqfts[i] > 0 ? prices[i]/sqfts[i] : 0).filter(v=>v>0);
+  const avgPpsf = avg(ppsfs);
+
+  const fmt = n => n > 0 ? '$' + Math.round(n).toLocaleString() : '—';
+  document.getElementById('r-avg-price').textContent = fmt(avgPrice);
+  document.getElementById('r-avg-ppsf').textContent = avgPpsf > 0 ? '$' + Math.round(avgPpsf) : '—';
+  document.getElementById('r-avg-dom').textContent = doms.length ? Math.round(avgDom) + ' days' : '—';
+  document.getElementById('r-comp-count').textContent = compsData.length;
+
+  // Value range
+  const subSqft = parseFloat(subjectData.sqft || 0);
+  let rec = 0;
+  if (avgPpsf > 0 && subSqft > 0) rec = avgPpsf * subSqft;
+  else if (avgPrice > 0) rec = avgPrice;
+
+  if (rec > 0) {
+    document.getElementById('r-rec').textContent = fmt(rec);
+    document.getElementById('r-low').textContent = fmt(rec * 0.95);
+    document.getElementById('r-high').textContent = fmt(rec * 1.05);
+  } else {
+    ['r-rec','r-low','r-high'].forEach(id => document.getElementById(id).textContent = '—');
+  }
+
+  // Comps table
+  const tbody = document.getElementById('r-comps-body');
+  const statusBadge = s => {
+    const cls = s === 'Sold' ? 'badge-sold' : s === 'Active' ? 'badge-active' : 'badge-pending';
+    return `<span class="badge ${cls}">${s}</span>`;
+  };
+  tbody.innerHTML = compsData.map(c => {
+    const price = parseFloat(String(c.price||'').replace(/[$,]/g,''));
+    const sqft = parseFloat(String(c.sqft||'').replace(/,/g,''));
+    const ppsf = (price > 0 && sqft > 0) ? '$' + Math.round(price/sqft) : '—';
+    return `<tr>
+      <td>${c.address||'—'}</td>
+      <td>${price > 0 ? '$'+Math.round(price).toLocaleString() : '—'}</td>
+      <td>${ppsf}</td>
+      <td>${sqft > 0 ? sqft.toLocaleString() : '—'}</td>
+      <td>${c.bedbath||'—'}</td>
+      <td>${c.dom||'—'}</td>
+      <td>${statusBadge(c.status||'Sold')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function regenerateReport() {
+  saveComps();
+  buildReport();
+  showToast('Report refreshed!');
+}
+
+// ---- UTILS ----
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+// ---- INIT ----
+window.addEventListener('DOMContentLoaded', () => {
+  loadProfile();
+  loadSubject();
+  loadComps();
+  if (!compRows.length) { addComp(); addComp(); addComp(); } // start with 3 blank rows
+});
+</script>
+
+<style>
+@media print {
+  nav, .page-title, .page-subtitle, .card:not(#report-output .card), .report-actions { display: none !important; }
+  body { background: white; }
+  .app { padding: 0; max-width: 100%; }
+  #page-report { display: block !important; }
+  .report-wrapper { display: block !important; }
+}
+</style>
+</body>
+</html>
