@@ -567,9 +567,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
         <div class="form-group">
           <label class="form-label">MLS List Date ★</label>
           <input class="form-input" id="l-listdate" type="date">
-          <div class="form-hint">Days on Market is calculated automatically from this date.</div>
+          <div class="form-hint">DOM starts counting from this date.</div>
         </div>
+        <div class="form-group">
+          <label class="form-label">Offer Accepted Date</label>
+          <input class="form-input" id="l-offerdate" type="date">
+          <div class="form-hint">DOM stops counting here once offer is accepted.</div>
+        </div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="l-status"><option value="active">Active</option><option value="hot">Hot</option><option value="pending">Pending</option><option value="closed">Closed</option></select></div>
+        <div></div>
       </div>
       <div class="form-group">
         <label class="form-label">MLS Photo URL ◆</label>
@@ -963,7 +971,7 @@ function renderDashboard() {
   const active = listings.filter(l => l.status !== 'closed');
   const totalVal = listings.reduce((s,l) => s+l.price, 0);
   const avgDOM = listings.filter(l=>l.listDate).length
-    ? Math.round(listings.filter(l=>l.listDate).reduce((s,l)=>s+(calcDOM(l.listDate)||0),0) / listings.filter(l=>l.listDate).length)
+    ? Math.round(listings.filter(l=>l.listDate).reduce((s,l)=>s+(calcDOM(l.listDate,l.offerDate)||0),0) / listings.filter(l=>l.listDate).length)
     : 0;
 
   document.getElementById('dash-count').textContent = listings.length + buyers.length;
@@ -977,7 +985,7 @@ function renderDashboard() {
     <tr onclick="openListingDetail(${l.id})" style="cursor:pointer">
       <td><span class="prop-name">${l.name}</span><span class="prop-addr">${l.addr}</span></td>
       <td><span class="price-val">${fmt(l.price)}</span></td>
-      <td>${domBadge(l.listDate)}</td>
+      <td>${domBadge(l.listDate, l.offerDate)}</td>
       <td><span class="status-pill ${l.status}">${l.status}</span></td>
     </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);font-family:\'DM Mono\',monospace;font-size:11px;padding:24px">No listings yet</td></tr>';
 
@@ -1037,7 +1045,7 @@ function renderListingsGrid() {
 function openListingDetail(id) {
   const l = listings.find(x=>x.id===id); if(!l) return;
   currentListingId = id;
-  const dom = calcDOM(l.listDate);
+  const dom = calcDOM(l.listDate, l.offerDate);
   document.getElementById('dl-eyebrow').textContent = l.type+' · '+l.status.toUpperCase();
   document.getElementById('dl-name').textContent = l.name;
   document.getElementById('dl-photo-wrap').innerHTML = l.photo
@@ -1048,7 +1056,7 @@ function openListingDetail(id) {
     <div class="detail-stat"><span class="kpi-label">List Price</span><span class="price-val" style="font-size:20px">${fmt(l.price)}</span></div>
     <div class="detail-stat"><span class="kpi-label">Beds / Baths</span><span class="price-val" style="font-size:18px">${l.beds?l.beds+' / '+l.baths:'—'}</span></div>
     <div class="detail-stat"><span class="kpi-label">Square Feet</span><span class="price-val" style="font-size:18px">${l.sqft?Number(l.sqft).toLocaleString():'—'}</span></div>
-    <div class="detail-stat"><span class="kpi-label">Days on Market</span><span class="price-val" style="font-size:18px">${dom!==null?dom+'d':'—'}</span>${l.listDate?`<span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;display:block">Listed ${fmtDate(l.listDate)}</span>`:''}</div>`;
+    <div class="detail-stat"><span class="kpi-label">Days on Market</span><span class="price-val" style="font-size:18px">${dom!==null?dom+'d':'—'}</span>${l.listDate?`<span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;display:block">Listed ${fmtDate(l.listDate)}</span>`:''}${l.offerDate?`<span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--green);margin-top:2px;display:block">Offer ${fmtDate(l.offerDate)}</span>`:''}</div>`;
   document.getElementById('detail-listing-modal').classList.add('open');
 }
 
@@ -1099,7 +1107,7 @@ function openAddListingModal() {
   document.getElementById('listing-modal-title').textContent='Add Listing';
   document.getElementById('listing-save-btn').textContent='Add to Portfolio';
   document.getElementById('listing-edit-id').value='';
-  ['l-name','l-addr','l-price','l-beds','l-baths','l-sqft','l-listdate','l-photo'].forEach(id=>document.getElementById(id).value='');
+  ['l-name','l-addr','l-price','l-beds','l-baths','l-sqft','l-listdate','l-offerdate','l-photo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('l-status').value='active';
   document.getElementById('l-type').value='Luxury';
   document.getElementById('add-listing-modal').classList.add('open');
@@ -1117,6 +1125,7 @@ async function saveListing() {
     baths:document.getElementById('l-baths').value||null,
     sqft:document.getElementById('l-sqft').value||null,
     list_date:document.getElementById('l-listdate').value||null,
+    offer_date:document.getElementById('l-offerdate').value||null,
     status:document.getElementById('l-status').value,
     photo:document.getElementById('l-photo').value.trim()||null,
   };
@@ -1533,8 +1542,8 @@ function generateReport() {
     if(active.some(l=>l.photo)){
       html+=`<div class="report-photo-grid">${active.slice(0,6).map(l=>l.photo?`<img src="${l.photo}" loading="lazy">`:`<div class="no-photo">No Photo</div>`).join('')}</div>`;
     }
-    html+=`<div class="card fade-up" style="margin-bottom:40px"><table class="prop-table"><thead><tr><th>Property</th><th>Type</th><th>Price</th><th>Beds/Baths</th><th>Sqft</th><th>Listed</th><th>DOM</th><th>Status</th></tr></thead><tbody>
-      ${active.map(l=>{const dom=calcDOM(l.listDate);return`<tr><td><span class="prop-name">${l.name}</span><span class="prop-addr">${l.addr}</span></td><td><span class="tag">${l.type}</span></td><td><span class="price-val">${fmt(l.price)}</span></td><td>${l.beds?l.beds+' / '+l.baths:'—'}</td><td>${l.sqft?Number(l.sqft).toLocaleString():'—'}</td><td style="font-family:'DM Mono',monospace;font-size:11px">${fmtDate(l.listDate)}</td><td>${dom!==null?dom+'d':'—'}</td><td><span class="status-pill ${l.status}">${l.status}</span></td></tr>`}).join('')}
+    html+=`<div class="card fade-up" style="margin-bottom:40px"><table class="prop-table"><thead><tr><th>Property</th><th>Type</th><th>Price</th><th>Beds/Baths</th><th>Sqft</th><th>Listed</th><th>Offer Date</th><th>DOM</th><th>Status</th></tr></thead><tbody>
+      ${active.map(l=>{const dom=calcDOM(l.listDate);const dom2=calcDOM(l.listDate,l.offerDate);return`<tr><td><span class="prop-name">${l.name}</span><span class="prop-addr">${l.addr}</span></td><td><span class="tag">${l.type}</span></td><td><span class="price-val">${fmt(l.price)}</span></td><td>${l.beds?l.beds+' / '+l.baths:'—'}</td><td>${l.sqft?Number(l.sqft).toLocaleString():'—'}</td><td style="font-family:'DM Mono',monospace;font-size:11px">${fmtDate(l.listDate)}</td><td style="font-family:'DM Mono',monospace;font-size:11px">${l.offerDate?fmtDate(l.offerDate):'—'}</td><td>${dom2!==null?dom2+'d':'—'}</td><td><span class="status-pill ${l.status}">${l.status}</span></td></tr>`}).join('')}
     </tbody></table></div>`;
   }
 
