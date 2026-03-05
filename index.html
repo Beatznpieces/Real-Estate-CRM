@@ -921,21 +921,21 @@ const fmt = n => '$' + Number(n).toLocaleString();
 const uid = () => Date.now() + Math.random();
 const today = () => new Date();
 
-function calcDOM(listDate) {
+function calcDOM(listDate, offerDate) {
   if (!listDate) return null;
-  const d = new Date(listDate);
-  if (isNaN(d)) return null;
-  const diff = Math.floor((today() - d) / (1000 * 60 * 60 * 24));
-  return Math.max(0, diff);
+  const start = new Date(listDate + 'T12:00:00');
+  if (isNaN(start)) return null;
+  // Stop counting at offer accepted date if present
+  const end = offerDate ? new Date(offerDate + 'T12:00:00') : today();
+  return Math.max(0, Math.floor((end - start) / (1000 * 60 * 60 * 24)));
 }
 
-function domBadge(listDate) {
-  const dom = calcDOM(listDate);
+function domBadge(listDate, offerDate) {
+  const dom = calcDOM(listDate, offerDate);
   if (dom === null) return '<span class="dom-badge">—</span>';
-  let cls = '';
-  if (dom > 60) cls = 'urgent';
-  else if (dom > 30) cls = 'warn';
-  return `<span class="dom-badge ${cls}">${dom}d</span>`;
+  const locked = !!offerDate;
+  const cls = locked ? '' : (dom > 60 ? 'urgent' : dom > 30 ? 'warn' : '');
+  return `<span class="dom-badge ${cls}">${dom}d${locked ? ' ✓' : ''}</span>`;
 }
 
 function fmtDate(d) {
@@ -1009,7 +1009,7 @@ function renderDashboard() {
     <div class="kpi-cell"><span class="kpi-label">Avg Days on Market</span><span class="kpi-value">${listings.filter(l=>l.listDate).length ? avgDOM+'d' : '—'}</span></div>`;
 
   document.getElementById('dash-listings-tb').innerHTML = listings.slice(0,5).map(l=>`
-    <tr onclick="openListingDetail(${l.id})" style="cursor:pointer">
+    <tr onclick="openListingDetail('${l.id}')" style="cursor:pointer">
       <td><span class="prop-name">${l.name}</span><span class="prop-addr">${l.addr}</span></td>
       <td><span class="price-val">${fmt(l.price)}</span></td>
       <td>${domBadge(l.listDate, l.offerDate)}</td>
@@ -1017,7 +1017,7 @@ function renderDashboard() {
     </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);font-family:\'DM Mono\',monospace;font-size:11px;padding:24px">No listings yet</td></tr>';
 
   document.getElementById('dash-buyers-tb').innerHTML = buyers.slice(0,5).map(b=>`
-    <tr onclick="openBuyerDetail(${b.id})" style="cursor:pointer">
+    <tr onclick="openBuyerDetail('${b.id}')" style="cursor:pointer">
       <td><span class="prop-name">${b.name}</span><span class="prop-addr">${b.addr}</span></td>
       <td><span class="price-val">${fmt(b.price)}</span></td>
       <td><span class="status-pill ${b.status}">${b.status}</span></td>
@@ -1051,7 +1051,7 @@ function renderListingsGrid() {
   grid.innerHTML = data.map(l => {
     const dom = calcDOM(l.listDate);
     const domTxt = dom !== null ? `${dom}d on market` : '';
-    return `<div class="listing-card fade-up" onclick="openListingDetail(${l.id})">
+    return `<div class="listing-card fade-up" onclick="openListingDetail('${l.id}')">
       ${photoBlock(l.photo)}
       <div class="listing-card-body">
         <div class="listing-card-name">${l.name}</div>
@@ -1185,7 +1185,7 @@ function renderBuyersGrid() {
     const coeTxt = b.coe ? (coeD >= 0 ? `COE in ${coeD}d` : `COE ${Math.abs(coeD)}d ago`) : '';
     const coeCls = coeD !== null && coeD <= 7 && coeD >= 0 ? 'urgent' : '';
     const contCount = (b.contingencies||[]).length;
-    return `<div class="listing-card buyer-card fade-up" onclick="openBuyerDetail(${b.id})">
+    return `<div class="listing-card buyer-card fade-up" onclick="openBuyerDetail('${b.id}')">
       ${photoBlock(b.photo)}
       <div class="listing-card-body">
         <div class="listing-card-name">${b.name}</div>
