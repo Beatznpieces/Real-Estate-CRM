@@ -299,9 +299,36 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 .cma-result-bar{background:var(--ink);color:var(--paper);padding:22px 28px;margin-top:16px;display:flex;align-items:center;justify-content:space-between}
 .form-textarea{width:100%;padding:10px 13px;border:1px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s;resize:vertical;min-height:80px}
 .form-textarea:focus{border-color:var(--accent)}
+
+/* PASSWORD SCREEN */
+#pw-screen{position:fixed;inset:0;background:var(--ink);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+#pw-screen.hidden{display:none}
+.pw-box{text-align:center;max-width:360px;width:100%;padding:0 24px}
+.pw-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;letter-spacing:8px;color:var(--paper);display:block;margin-bottom:6px}
+.pw-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--warm-mid);display:block;margin-bottom:48px}
+.pw-input{width:100%;padding:14px 18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--paper);font-family:'DM Mono',monospace;font-size:14px;letter-spacing:4px;text-align:center;outline:none;margin-bottom:12px;transition:border-color .2s}
+.pw-input:focus{border-color:var(--accent)}
+.pw-input::placeholder{letter-spacing:2px;font-size:11px;color:rgba(255,255,255,.2)}
+.pw-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.pw-btn:hover{background:var(--accent-light)}
+.pw-error{font-family:'DM Mono',monospace;font-size:10px;color:#e07070;letter-spacing:1px;margin-top:10px;min-height:16px;display:block}
+.pw-rule{width:40px;height:1px;background:var(--accent);margin:0 auto 32px}
 </style>
 </head>
 <body>
+
+<!-- PASSWORD SCREEN -->
+<div id="pw-screen">
+  <div class="pw-box">
+    <span class="pw-logo">ESTATE</span>
+    <span class="pw-sub">Property Intelligence</span>
+    <div class="pw-rule"></div>
+    <input class="pw-input" id="pw-input" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()">
+    <button class="pw-btn" onclick="checkPassword()">Access CRM</button>
+    <span class="pw-error" id="pw-error"></span>
+  </div>
+</div>
+
 <div class="shell">
 
 <!-- ══ SIDEBAR ══ -->
@@ -1770,7 +1797,40 @@ function showLoadingState(loading) {
   document.getElementById('topbar-title').textContent = loading ? 'Loading your data…' : META['dashboard'][1];
 }
 
-init();
+// ═══════════════════════════ PASSWORD ═══════════════════════════
+const PW_HASH = '393475de8cdd00cd810438631d36bc695fcbaa98263f97f1af3cc34e15d0b93d';
+
+async function hashString(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPassword() {
+  const val = document.getElementById('pw-input').value;
+  const hash = await hashString(val);
+  if (hash === PW_HASH) {
+    sessionStorage.setItem('crm_auth', hash);
+    document.getElementById('pw-screen').classList.add('hidden');
+    init();
+  } else {
+    document.getElementById('pw-error').textContent = 'Incorrect password — try again';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+async function checkAuth() {
+  const stored = sessionStorage.getItem('crm_auth');
+  const hash = await hashString('placeholder_will_not_match');
+  if (stored === PW_HASH) {
+    document.getElementById('pw-screen').classList.add('hidden');
+    init();
+  }
+  // else stay on password screen
+}
+checkAuth();
+
+
 </script>
 </body>
 </html>
