@@ -129,7 +129,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 .pipeline-deal-val{font-family:'Playfair Display',serif;font-size:14px;font-weight:600}
 
 /* ── CLIENT CARDS ── */
-/* client-card — see below */
+.client-card{border:1px solid var(--border);padding:24px;background:var(--white);display:flex;gap:16px;transition:all .2s}
+.client-card:hover{border-color:var(--accent)}
 .client-initials{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;font-weight:700;flex-shrink:0}
 
 /* ── CSV ── */
@@ -236,10 +237,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 }
 
 /* CLIENT CARDS */
-.client-card{border:1px solid var(--border);background:var(--white);padding:22px 24px;cursor:pointer;transition:all .2s;display:grid;grid-template-columns:56px 1fr;gap:0 16px;align-items:start}
+.client-card{border:1px solid var(--border);background:var(--white);padding:22px;cursor:pointer;transition:all .2s}
 .client-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(13,13,11,.08)}
-.client-card-body{grid-column:2}
-.client-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-top:4px}
+.client-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:12px}
 .client-name-txt{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:2px}
 .client-type-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:block}
 .client-contact-row{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px}
@@ -271,10 +271,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 .form-textarea:focus{border-color:var(--accent)}
 
 /* CLIENT CARDS */
-.client-card{border:1px solid var(--border);background:var(--white);padding:22px 24px;cursor:pointer;transition:all .2s;display:grid;grid-template-columns:56px 1fr;gap:0 16px;align-items:start}
+.client-card{border:1px solid var(--border);background:var(--white);padding:22px;cursor:pointer;transition:all .2s}
 .client-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(13,13,11,.08)}
-.client-card-body{grid-column:2}
-.client-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-top:4px}
+.client-avatar-lg{width:48px;height:48px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:12px}
 .client-name-txt{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:2px}
 .client-type-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:block}
 .client-contact-row{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px}
@@ -483,7 +482,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
         <div style="flex:1"></div>
         <button class="btn btn-primary" onclick="openAddClientModal()">+ Add Client</button>
       </div>
-      <div id="clients-grid" class="grid-2 fade-up"></div>
+      <div id="clients-grid" class="grid-3 fade-up"></div>
     </div>
 
     <!-- PIPELINE -->
@@ -1116,7 +1115,6 @@ function editCurrentListing() {
   document.getElementById('l-baths').value=l.baths||'';
   document.getElementById('l-sqft').value=l.sqft||'';
   document.getElementById('l-listdate').value=l.listDate||'';
-  document.getElementById('l-offerdate').value=l.offerDate||'';
   document.getElementById('l-status').value=l.status;
   document.getElementById('l-photo').value=l.photo||'';
   document.getElementById('add-listing-modal').classList.add('open');
@@ -1362,21 +1360,18 @@ function renderClientsGrid() {
   let data=tf==='all'?clients:clients.filter(c=>c.type===tf);
   document.getElementById('clients-count').textContent=clients.length;
   const grid=document.getElementById('clients-grid');
-  grid.className='grid-2 fade-up';
   if(!data.length){grid.innerHTML='<div class="empty-state"><div class="empty-state-title">No clients yet</div><div class="empty-state-sub">Add your first client above</div></div>';return;}
   grid.innerHTML=data.map(cl=>`
     <div class="client-card fade-up" onclick="openClientDetail('${cl.id}')">
       <div class="client-avatar-lg">${initials(cl.name)}</div>
-      <div class="client-card-body">
-        <div class="client-name-txt">${cl.name}</div>
-        <span class="client-type-badge">${cl.type}</span>
-        ${cl.phone?`<div class="client-contact-row">&#128222; <a href="tel:${cl.phone}">${cl.phone}</a></div>`:''}
-        ${cl.email?`<div class="client-contact-row">&#9993; <a href="mailto:${cl.email}">${cl.email}</a></div>`:''}
-        ${cl.budget?`<div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-top:10px">${cl.budget}</div>`:''}
-        <div style="margin-top:8px">
-          ${cl.preapproval?`<span class="tag">${cl.preapproval}</span>`:''}
-          ${cl.neighborhoods?cl.neighborhoods.split(',').slice(0,2).map(n=>`<span class="tag">${n.trim()}</span>`).join(''):''}
-        </div>
+      <div class="client-name-txt">${cl.name}</div>
+      <span class="client-type-badge">${cl.type}</span>
+      ${cl.phone?`<div class="client-contact-row">&#128222; <a href="tel:${cl.phone}">${cl.phone}</a></div>`:''}
+      ${cl.email?`<div class="client-contact-row">&#9993; <a href="mailto:${cl.email}">${cl.email}</a></div>`:''}
+      ${cl.budget?`<div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-top:10px">${cl.budget}</div>`:''}
+      <div style="margin-top:8px">
+        ${cl.preapproval?`<span class="tag">${cl.preapproval}</span>`:''}
+        ${cl.neighborhoods?cl.neighborhoods.split(',').slice(0,2).map(n=>`<span class="tag">${n.trim()}</span>`).join(''):''}
       </div>
     </div>`).join('');
 }
