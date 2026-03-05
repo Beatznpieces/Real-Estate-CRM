@@ -902,12 +902,12 @@ async function sbDelete(table, id) {
 
 // Broker name stays in browser storage (not sensitive data)
 const SK = { broker: 'estate_broker_v1' };
-async function loadBroker(key, fallback) {
-  try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : fallback; }
+function loadBroker(key, fallback) {
+  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }
   catch { return fallback; }
 }
-async function persistBroker(key, data) {
-  try { await window.storage.set(key, JSON.stringify(data)); } catch(e) {}
+function persistBroker(key, data) {
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
 }
 
 // ═══════════════════════════ STATE ═══════════════════════════
@@ -1727,12 +1727,12 @@ async function saveCMA() {
 function mapCMA(r){return{id:r.id,subjectAddr:r.subject_address,beds:r.subject_beds,baths:r.subject_baths,sqft:r.subject_sqft,type:r.subject_type,comps:r.comps||[],suggestedLow:r.suggested_low,suggestedHigh:r.suggested_high,notes:r.notes||'',createdAt:r.created_at};}
 
 // ═══════════════════════════ ONBOARDING ═══════════════════════════
-async function checkOnboarding() {
+function checkOnboarding() {
   try {
-    const r=await loadBroker(SK.broker, null);
-    if(r){const d=r;applyBrokerInfo(d.name,d.title);}
-    else{document.getElementById('onboard-modal').classList.add('open');}
-  } catch {document.getElementById('onboard-modal').classList.add('open');}
+    const r = loadBroker(SK.broker, null);
+    if(r){ applyBrokerInfo(r.name, r.title); }
+    else { document.getElementById('onboard-modal').classList.add('open'); }
+  } catch { document.getElementById('onboard-modal').classList.add('open'); }
 }
 
 function applyBrokerInfo(name,title) {
@@ -1744,10 +1744,10 @@ function applyBrokerInfo(name,title) {
   if(a) a.textContent=(name||'YN').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 }
 
-async function saveOnboarding() {
+function saveOnboarding() {
   const name=document.getElementById('onboard-name').value.trim()||'Your Name';
   const title=document.getElementById('onboard-title').value.trim()||'Your Title';
-  try{await persistBroker(SK.broker,{name,title});}catch(e){}
+  persistBroker(SK.broker,{name,title});
   applyBrokerInfo(name,title); closeModals(); toast('Welcome, '+name+' — your CRM is ready');
 }
 
@@ -1787,7 +1787,7 @@ async function init() {
     toast('Could not connect to database — check your connection','error');
   }
   showLoadingState(false);
-  await checkOnboarding();
+  checkOnboarding();
   renderDashboard();
   updateClientDatalist();
   setupDragDrop();
