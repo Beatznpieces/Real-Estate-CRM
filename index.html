@@ -322,6 +322,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 .c-info{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .c-info a{color:var(--muted);text-decoration:none}.c-info a:hover{color:var(--accent)}
 .c-budget{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;margin-top:8px}
+
+/* PHOTO UPLOAD */
+.photo-upload-zone{border:2px dashed var(--border);background:var(--cream);padding:18px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.photo-upload-zone:hover{border-color:var(--accent);background:rgba(184,146,74,.04)}
+.photo-upload-zone.uploading{opacity:.6;pointer-events:none}
+.photo-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.photo-upload-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.photo-upload-label strong{color:var(--accent);display:block;font-size:11px;margin-bottom:4px}
+.upload-progress{height:3px;background:var(--accent);width:0%;transition:width .3s;margin-top:8px}
+.photo-current{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.photo-current-placeholder{width:100%;aspect-ratio:16/9;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
 </style>
 </head>
 <body>
@@ -615,11 +626,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
         <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="l-status"><option value="active">Active</option><option value="hot">Hot</option><option value="pending">Pending</option><option value="closed">Closed</option></select></div>
         <div></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">MLS Photo URL ◆</label>
-        <input class="form-input" id="l-photo" type="url" placeholder="https://mlsimages.com/photo/listing.jpg">
-        <div class="form-hint">Paste the direct photo link from your MLS listing.</div>
-      </div>
+      <input type="hidden" id="l-photo">
       <button class="btn btn-primary" onclick="saveListing()" style="width:100%;padding:14px;margin-top:4px" id="listing-save-btn">Add to Portfolio</button>
     </div>
   </div>
@@ -714,12 +721,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
     <div class="detail-stats" id="dl-stats"></div>
     <div style="padding:20px 28px">
       <div class="form-group">
-        <label class="form-label">MLS Photo URL — update anytime</label>
-        <div style="display:flex;gap:8px">
-          <input class="photo-url-input" id="dl-photo-url" type="url" placeholder="Paste MLS photo link…">
-          <button class="btn btn-accent" style="padding:8px 16px;font-size:10px" onclick="updateListingPhoto()">Update</button>
+        <label class="form-label">Property Photo</label>
+        <div class="photo-upload-zone" id="dl-upload-zone" onclick="document.getElementById('dl-file-input').click()">
+          <input type="file" id="dl-file-input" accept="image/*" onchange="uploadListingPhoto(this.files[0])" onclick="event.stopPropagation()">
+          <div class="photo-upload-label"><strong id="dl-upload-label">↑ Upload Photo</strong>Click to choose or drag a photo here<br>JPG, PNG, WEBP — max 5MB</div>
+          <div class="upload-progress" id="dl-upload-progress"></div>
         </div>
-        <div class="form-hint">Saves instantly to your browser.</div>
       </div>
       <div style="display:flex;gap:10px;margin-top:4px">
         <button class="btn btn-outline" onclick="editCurrentListing()" style="flex:1">✎ Edit Details</button>
@@ -744,10 +751,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
     <div style="padding:20px 28px">
       <div id="db-contingencies" style="margin-bottom:16px"></div>
       <div class="form-group">
-        <label class="form-label">MLS Photo URL — update anytime</label>
-        <div style="display:flex;gap:8px">
-          <input class="photo-url-input" id="db-photo-url" type="url" placeholder="Paste MLS photo link…">
-          <button class="btn btn-accent" style="padding:8px 16px;font-size:10px" onclick="updateBuyerPhoto()">Update</button>
+        <label class="form-label">Property Photo</label>
+        <div class="photo-upload-zone" id="db-upload-zone" onclick="document.getElementById('db-file-input').click()">
+          <input type="file" id="db-file-input" accept="image/*" onchange="uploadBuyerPhoto(this.files[0])" onclick="event.stopPropagation()">
+          <div class="photo-upload-label"><strong id="db-upload-label">↑ Upload Photo</strong>Click to choose or drag a photo here<br>JPG, PNG, WEBP — max 5MB</div>
+          <div class="upload-progress" id="db-upload-progress"></div>
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-top:4px">
@@ -1087,7 +1095,10 @@ function openListingDetail(id) {
   document.getElementById('dl-photo-wrap').innerHTML = l.photo
     ? `<img src="${l.photo}" class="detail-photo" loading="lazy">`
     : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid);letter-spacing:2px">NO PHOTO — paste MLS URL below</span></div>`;
-  document.getElementById('dl-photo-url').value = l.photo||'';
+  const dlLabel = document.getElementById('dl-upload-label');
+  if (dlLabel) dlLabel.textContent = l.photo ? '✓ Photo saved — click to replace' : '↑ Upload Photo';
+  const dlBar = document.getElementById('dl-upload-progress');
+  if (dlBar) dlBar.style.width = '0%';
   document.getElementById('dl-stats').innerHTML = `
     <div class="detail-stat"><span class="kpi-label">List Price</span><span class="price-val" style="font-size:20px">${fmt(l.price)}</span></div>
     <div class="detail-stat"><span class="kpi-label">Beds / Baths</span><span class="price-val" style="font-size:18px">${l.beds?l.beds+' / '+l.baths:'—'}</span></div>
@@ -1096,17 +1107,36 @@ function openListingDetail(id) {
   document.getElementById('detail-listing-modal').classList.add('open');
 }
 
-async function updateListingPhoto() {
-  const url = document.getElementById('dl-photo-url').value.trim();
-  const idx = listings.findIndex(x=>x.id===currentListingId); if(idx===-1) return;
+async function uploadListingPhoto(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Photo must be under 5MB', 'error'); return; }
+  const zone = document.getElementById('dl-upload-zone');
+  const label = document.getElementById('dl-upload-label');
+  const bar = document.getElementById('dl-upload-progress');
+  zone.classList.add('uploading'); label.textContent = 'Uploading…'; bar.style.width = '40%';
   try {
-    await sbUpdate('listings', currentListingId, {photo: url||null});
-    listings[idx].photo = url||null;
-    document.getElementById('dl-photo-wrap').innerHTML = url
-      ? `<img src="${url}" class="detail-photo" loading="lazy">`
-      : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid)">NO PHOTO</span></div>`;
-    renderListingsGrid(); renderDashboard(); toast('Photo URL saved');
-  } catch(e) { toast('Update failed','error'); }
+    const ext = file.name.split('.').pop();
+    const path = `listings/${currentListingId}-${Date.now()}.${ext}`;
+    const up = await fetch(`${SUPA_URL}/storage/v1/object/property-photos/${path}`, {
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':file.type,'x-upsert':'true'},
+      body:file
+    });
+    if (!up.ok) throw new Error(await up.text());
+    bar.style.width = '80%';
+    const url = `${SUPA_URL}/storage/v1/object/public/property-photos/${path}`;
+    await sbUpdate('listings', currentListingId, {photo:url});
+    const idx = listings.findIndex(x=>x.id===currentListingId);
+    if (idx>-1) listings[idx].photo = url;
+    bar.style.width = '100%';
+    document.getElementById('dl-photo-wrap').innerHTML = `<img src="${url}" class="detail-photo" loading="lazy">`;
+    label.textContent = '✓ Uploaded — click to replace';
+    zone.classList.remove('uploading');
+    renderListingsGrid(); renderDashboard(); toast('Photo uploaded');
+  } catch(e) {
+    zone.classList.remove('uploading'); label.textContent = '↑ Upload Photo'; bar.style.width = '0%';
+    toast('Upload failed — try again','error'); console.error(e);
+  }
 }
 
 function editCurrentListing() {
@@ -1225,7 +1255,10 @@ function openBuyerDetail(id) {
   document.getElementById('db-photo-wrap').innerHTML = b.photo
     ? `<img src="${b.photo}" class="detail-photo" loading="lazy">`
     : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid);letter-spacing:2px">NO PHOTO — paste MLS URL below</span></div>`;
-  document.getElementById('db-photo-url').value = b.photo||'';
+  const dbLabel = document.getElementById('db-upload-label');
+  if (dbLabel) dbLabel.textContent = b.photo ? '✓ Photo saved — click to replace' : '↑ Upload Photo';
+  const dbBar = document.getElementById('db-upload-progress');
+  if (dbBar) dbBar.style.width = '0%';
   document.getElementById('db-stats').innerHTML = `
     <div class="detail-stat"><span class="kpi-label">Purchase Price</span><span class="price-val" style="font-size:20px">${fmt(b.price)}</span></div>
     <div class="detail-stat"><span class="kpi-label">Beds / Baths</span><span class="price-val" style="font-size:18px">${b.beds?b.beds+' / '+b.baths:'—'}</span></div>
@@ -1239,14 +1272,36 @@ function openBuyerDetail(id) {
   document.getElementById('detail-buyer-modal').classList.add('open');
 }
 
-function updateBuyerPhoto() {
-  const url = document.getElementById('db-photo-url').value.trim();
-  const idx = buyers.findIndex(x=>x.id===currentBuyerId); if(idx===-1) return;
-  buyers[idx].photo = url||null;
-  document.getElementById('db-photo-wrap').innerHTML = url
-    ? `<img src="${url}" class="detail-photo" loading="lazy">`
-    : `<div class="detail-photo-placeholder"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--warm-mid)">NO PHOTO</span></div>`;
-  renderBuyersGrid(); renderDashboard(); toast('Photo URL saved');
+async function uploadBuyerPhoto(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Photo must be under 5MB', 'error'); return; }
+  const zone = document.getElementById('db-upload-zone');
+  const label = document.getElementById('db-upload-label');
+  const bar = document.getElementById('db-upload-progress');
+  zone.classList.add('uploading'); label.textContent = 'Uploading…'; bar.style.width = '40%';
+  try {
+    const ext = file.name.split('.').pop();
+    const path = `buyers/${currentBuyerId}-${Date.now()}.${ext}`;
+    const up = await fetch(`${SUPA_URL}/storage/v1/object/property-photos/${path}`, {
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':file.type,'x-upsert':'true'},
+      body:file
+    });
+    if (!up.ok) throw new Error(await up.text());
+    bar.style.width = '80%';
+    const url = `${SUPA_URL}/storage/v1/object/public/property-photos/${path}`;
+    await sbUpdate('buyers', currentBuyerId, {photo:url});
+    const idx = buyers.findIndex(x=>x.id===currentBuyerId);
+    if (idx>-1) buyers[idx].photo = url;
+    bar.style.width = '100%';
+    document.getElementById('db-photo-wrap').innerHTML = `<img src="${url}" class="detail-photo" loading="lazy">`;
+    label.textContent = '✓ Uploaded — click to replace';
+    zone.classList.remove('uploading');
+    renderBuyersGrid(); renderDashboard(); toast('Photo uploaded');
+  } catch(e) {
+    zone.classList.remove('uploading'); label.textContent = '↑ Upload Photo'; bar.style.width = '0%';
+    toast('Upload failed — try again','error'); console.error(e);
+  }
 }
 
 function editCurrentBuyer() {
